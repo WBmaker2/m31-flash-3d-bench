@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3D 도형 조립실 — three.js</title>
+    <link rel="stylesheet" href="../common/styles.css" />
+    <style>
+      :root {
+        --accent: #ffb800;
+        --ink: #e9e9e2;
+        --ink-soft: #9aa39c;
+        --line: rgba(255, 255, 255, 0.13);
+        --panel: rgba(16, 18, 22, 0.86);
+        --panel-solid: #14161a;
+        --font-mono: "IBM Plex Mono", "Nanum Gothic Coding", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #14161a;
+        color: var(--ink);
+        font-family: var(--font-mono);
+        -webkit-font-smoothing: antialiased;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #scene {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+
+      .panel {
+        position: fixed;
+        z-index: 2;
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+
+      .panel-head {
+        top: 18px;
+        left: 18px;
+        padding: 14px 18px;
+        max-width: 330px;
+      }
+
+      .panel-head .kicker {
+        margin: 0 0 4px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+      }
+
+      .panel-head h1 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .panel-head p {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+      }
+
+      .panel-stats {
+        top: 18px;
+        right: 18px;
+        padding: 12px 16px;
+        min-width: 176px;
+      }
+
+      .panel-stats dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 14px;
+        font-size: 12.5px;
+      }
+
+      .panel-stats dt {
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      .panel-stats dd {
+        margin: 0;
+        text-align: right;
+        font-weight: 600;
+      }
+
+      .panel-bar {
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-bar button {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 9px 14px;
+        cursor: pointer;
+      }
+
+      .panel-bar button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .panel-bar button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .panel-bar .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #14161a;
+        font-weight: 700;
+      }
+
+      .panel-bar .btn-primary:hover {
+        color: #14161a;
+      }
+
+      .hint-keys {
+        right: 18px;
+        bottom: 18px;
+        padding: 9px 13px;
+        font-size: 11.5px;
+        line-height: 1.7;
+        color: var(--ink-soft);
+      }
+
+      .hint-keys b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        font: 500 11px/1 var(--font-mono);
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        color: var(--ink-soft);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 13px;
+      }
+
+      .back-link:hover {
+        color: var(--accent);
+        border-color: rgba(255, 184, 0, 0.5);
+      }
+
+      .held {
+        position: fixed;
+        left: 18px;
+        bottom: 18px;
+        z-index: 2;
+        padding: 10px 14px;
+        font-size: 12.5px;
+        border-left: 2px solid var(--accent);
+      }
+
+      .held b {
+        color: var(--accent);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.186.1/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <canvas id="scene"></canvas>
+    <a class="back-link" href="../index.html">&#8592; GAMES</a>
+
+    <section class="panel panel-head">
+      <p class="kicker">도형 조립</p>
+      <h1 id="level-name">작은 정육면체</h1>
+      <p id="level-hint">정육면체 블록을 놓아 보세요.</p>
+    </section>
+
+    <section class="panel panel-stats">
+      <dl>
+        <dt>채운 칸</dt>
+        <dd id="stat-filled">0 / 1</dd>
+        <dt>사용 블록</dt>
+        <dd id="stat-used">0</dd>
+        <dt>남은 블록</dt>
+        <dd id="stat-left">1</dd>
+      </dl>
+    </section>
+
+    <section class="panel held" id="held-panel">
+      <b id="held-name">블록을 고르세요</b>
+      <div id="held-detail">아래 트레이에서 블록을 눌러 고른 뒤 보드의 반투명 모양을 채우세요.</div>
+    </section>
+
+    <nav class="panel panel-bar">
+      <button id="btn-rotate" type="button" disabled>회전 (R)</button>
+      <button id="btn-undo" type="button" disabled>되돌리기 (Z)</button>
+      <button id="btn-levels" class="btn-primary" type="button">레벨 선택</button>
+    </nav>
+
+    <p class="panel hint-keys">
+      <b>R</b> 회전 · <b>Q</b> 반대 회전 · <b>Z</b> 되돌리기 · <b>드래그</b> 시점 · <b>휠</b> 확대
+    </p>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

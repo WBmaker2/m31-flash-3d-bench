@@ -16,7 +16,7 @@ const ROOT = path.resolve(HERE, "..");
 const CARD_DIR = path.join(ROOT, "docs", "cards");
 const CHECKS_FILE = path.join(ROOT, "docs", "checks.json");
 
-const GAMES = ["zoo", "molecule", "defense"];
+const GAMES = ["zoo", "molecule", "defense", "shapes"];
 const ANGLES = ["card", "side", "top"];
 const VIEWPORT = { width: 1200, height: 750 };
 
@@ -32,7 +32,8 @@ const MIME = {
 function serve(dir) {
   const server = createServer(async (req, res) => {
     const url = new URL(req.url, "http://localhost");
-    const rel = decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname);
+    let rel = decodeURIComponent(url.pathname);
+    if (rel.endsWith("/")) rel = `${rel}index.html`;
     const target = path.join(dir, path.normalize(rel));
     if (!target.startsWith(dir)) {
       res.writeHead(403).end("forbidden");
@@ -94,12 +95,11 @@ const browser = await chromium.launch({ headless: true });
 const results = {};
 
 for (const game of GAMES) {
-  const gameDir = path.join(ROOT, game);
-  if (!existsSync(gameDir)) {
+  if (!existsSync(path.join(ROOT, game))) {
     console.error(`알 수 없는 게임: ${game}`);
     process.exit(2);
   }
-  const { server, port } = await serve(gameDir);
+  const { server, port } = await serve(ROOT);
   const context = await browser.newContext({ viewport: VIEWPORT, locale: "ko-KR" });
   const page = await context.newPage();
 
@@ -109,7 +109,7 @@ for (const game of GAMES) {
   });
   page.on("pageerror", (e) => consoleErrors.push(e.message));
 
-  await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "load" });
+  await page.goto(`http://127.0.0.1:${port}/${game}/`, { waitUntil: "load" });
   await page.waitForFunction(() => window.__gameReady === true, null, { timeout: 20000 });
   await page.waitForTimeout(900);
 
@@ -153,9 +153,13 @@ for (const game of GAMES) {
 
 await browser.close();
 
+const commonTests = await testCount("common", previousChecks.totals?.commonTests ?? 0);
+
 const totals = {
   games: GAMES.length,
-  tests: GAMES.reduce((sum, game) => sum + results[game].tests, 0),
+  tests: GAMES.reduce((sum, game) => sum + results[game].tests, 0) + commonTests,
+  gameTests: GAMES.reduce((sum, game) => sum + results[game].tests, 0),
+  commonTests,
   views: GAMES.length * ANGLES.length,
   consoleErrors: GAMES.reduce((sum, game) => sum + results[game].consoleErrors, 0),
   invariantViolations: GAMES.reduce((sum, game) => sum + results[game].invariantViolations, 0),

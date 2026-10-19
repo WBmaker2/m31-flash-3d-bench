@@ -28,7 +28,8 @@ const MIME = {
 function serve(dir) {
   const server = createServer(async (req, res) => {
     const url = new URL(req.url, "http://localhost");
-    const rel = decodeURIComponent(url.pathname === "/" ? "/index.html" : url.pathname);
+    let rel = decodeURIComponent(url.pathname);
+    if (rel.endsWith("/")) rel = `${rel}index.html`;
     const target = path.join(dir, path.normalize(rel));
     if (!target.startsWith(dir)) {
       res.writeHead(403).end("forbidden");
@@ -59,14 +60,13 @@ async function diffRatio(first, second) {
 
 const target = process.argv[2] ?? "zoo";
 const isLanding = target === "landing";
-const gameDir = isLanding ? ROOT : path.join(ROOT, target);
-if (!existsSync(gameDir)) {
-  console.error(`알 수 없는 대상: ${target} (zoo|molecule|defense|landing)`);
+if (!existsSync(path.join(ROOT, target)) && !isLanding) {
+  console.error(`알 수 없는 대상: ${target} (zoo|molecule|defense|shapes|landing)`);
   process.exit(2);
 }
 
 await mkdir(SHOT_DIR, { recursive: true });
-const { server, port } = await serve(gameDir);
+const { server, port } = await serve(ROOT);
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "ko-KR" });
 const page = await context.newPage();
@@ -91,7 +91,8 @@ const shot = async (label) => {
   return file;
 };
 
-await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: "load" });
+const entryUrl = isLanding ? "/" : `/${target}/`;
+await page.goto(`http://127.0.0.1:${port}${entryUrl}`, { waitUntil: "load" });
 await page.waitForFunction(
   isLanding ? () => window.__landingReady === true : () => window.__gameReady === true,
   null,
@@ -104,7 +105,13 @@ if (isLanding) {
   const links = await page.$$eval(".play", (nodes) =>
     nodes.map((node) => ({ href: node.dataset.href, title: node.dataset.title })),
   );
-  if (links.length !== 3) failures.push(`카드 ${links.length}개입니다. 3개를 기대했습니다.`);
+  const checksFile = path.join(ROOT, "docs", "checks.json");
+  const expectedGames = existsSync(checksFile)
+    ? JSON.parse(await readFile(checksFile, "utf8")).totals?.games
+    : null;
+  if (expectedGames !== null && links.length !== expectedGames) {
+    failures.push(`카드 ${links.length}개입니다. ${expectedGames}개를 기대했습니다.`);
+  }
 
   for (const link of links) {
     const response = await page.request.get(`http://127.0.0.1:${port}/${link.href}`);
@@ -133,7 +140,6 @@ if (isLanding) {
   const shown = await page.$$eval("[data-check]", (nodes) =>
     Object.fromEntries(nodes.map((node) => [node.dataset.check, node.dataset.value])),
   );
-  const checksFile = path.join(ROOT, "docs", "checks.json");
   if (!existsSync(checksFile)) {
     failures.push("docs/checks.json 이 없습니다. scripts/card-shots.mjs 를 먼저 실행하세요.");
   } else {
@@ -158,6 +164,9 @@ if (isLanding) {
 } else {
   console.log(`${target}: 전용 조작 단계 없음`);
 }
+
+await page.keyboard.press("Escape").catch(() => {});
+await page.waitForTimeout(300);
 
 const viewFiles = {};
 for (const view of isLanding ? [] : VIEWS) {

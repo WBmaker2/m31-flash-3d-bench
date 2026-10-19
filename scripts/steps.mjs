@@ -1,3 +1,25 @@
+export async function placeShapesBlocks(page, count = 2) {
+  const toPixels = (entry) => ({ x: ((entry.x + 1) / 2) * 1280, y: ((1 - entry.y) / 2) * 800 });
+
+  for (let index = 0; index < count; index += 1) {
+    const positions = await page.evaluate(() => window.__gameApi?.getScreenPositions?.() ?? []);
+    const tray = positions.find((entry) => entry.id === "tray-0");
+    const cells = positions.filter((entry) => entry.id.startsWith("cell-"));
+    if (!tray || cells.length === 0) return;
+
+    const trayPoint = toPixels(tray);
+    await page.mouse.click(trayPoint.x, trayPoint.y);
+    await page.waitForTimeout(300);
+
+    const cell = cells[index] ?? cells[0];
+    const point = toPixels(cell);
+    await page.mouse.move(point.x, point.y);
+    await page.waitForTimeout(150);
+    await page.mouse.click(point.x, point.y);
+    await page.waitForTimeout(400);
+  }
+}
+
 export const STEPS = {
   zoo: async (page, shot) => {
     await page.getByRole("button", { name: "강아지" }).click();
@@ -47,10 +69,13 @@ export const STEPS = {
     await page.waitForTimeout(400);
     await shot("04-웨이브종료");
   },
+  shapes: async (page, shot) => {
+    await placeShapesBlocks(page, 2);
+    await shot("02-배치중");
+  },
 };
 
-export const CARD_SETUP = {
-  zoo: async (page) => {
+export const CARD_SETUP = {  zoo: async (page) => {
     await page.getByRole("button", { name: "동물 추가" }).click();
     await page.waitForTimeout(400);
   },
@@ -60,6 +85,9 @@ export const CARD_SETUP = {
     await page.waitForTimeout(500);
     await page.getByRole("button", { name: "자동 배치" }).click();
     await page.waitForTimeout(1400);
+  },
+  shapes: async (page) => {
+    await placeShapesBlocks(page, 2);
   },
   defense: async (page) => {
     const canvas = page.locator("canvas").first();
