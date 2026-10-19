@@ -11,7 +11,8 @@ python3 -m http.server 5174
 
 ## 조작
 
-- **목표 분자** (물·메테인·암모니아·이산화탄소) — 맞출 분자를 고릅니다.
+- **목표 분자** (물·메테인·암모니아·이산화탄소·수소·질소·산소) — 맞출 분자를 고릅니다.
+- **레벨** — 기초 3문제 / 심화 7문제. 정답 +100, 연속 정답 보너스, 오답 시 시간 차감.
 - **원자 팔레트** (H·C·N·O) — 고른 뒤 작업대를 누르면 원자가 놓입니다.
 - **원자 클릭 → 다른 원자 클릭** — 두 원자 사이에 결합이 생깁니다. 같은 두 원자를 다시 누르면 결합 차수가 1 → 2 → 3 으로 올라갑니다.
 - **결합 클릭** — 결합을 지웁니다.
@@ -26,6 +27,8 @@ python3 -m http.server 5174
 | `src/stage.js` | 렌더러·조명·바닥 그리드·고정 스텝 루프·평면 피킹 |
 | `src/elements.js` | 원자별 반지름·색상·원자가 전자 수 |
 | `src/chemistry.js` | 목표 분자 정의, VSEPR 배치 계산, 판정 |
+| `src/session.js` | 레벨 구성과 채점 세션 (순수) |
+| `src/session.test.js` | 단위 테스트 13개 (레벨·세션) |
 | `src/invariants.js` | 기하 불변식 (결합각 실측, 분자 축 ↔ 시선, 원자 겹침) |
 | `src/chemistry.test.js` | 유닛 테스트 16개 (결합각·가독성·단위 계약·판정) |
 | `src/main.js` | 원자·결합 관리, UI 배선, 불변식 배선, 상태 조회 API |
@@ -64,7 +67,7 @@ python3 -m http.server 5174
 
 ```bash
 node ../scripts/shot.mjs molecule        # 4시점 캡처 + 자동 판정
-npx vitest run minimax-m31-test/molecule # 유닛 테스트 16개
+npx vitest run molecule                  # 유닛 테스트 29개
 ```
 
 `src/invariants.js`가 매 0.5초마다 검사하고, 위반이 있으면 화면 하단에 배지가 뜹니다.

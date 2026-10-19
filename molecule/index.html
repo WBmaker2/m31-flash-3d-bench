@@ -183,6 +183,36 @@
         justify-content: center;
       }
 
+      .session-panel {
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 11px 18px;
+        text-align: center;
+        border-color: rgba(53, 214, 192, 0.45);
+      }
+
+      .session-panel[hidden] {
+        display: none;
+      }
+
+      .session-panel strong {
+        display: block;
+        font-size: 15px;
+        margin-bottom: 4px;
+      }
+
+      .session-row {
+        display: flex;
+        gap: 16px;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+      }
+
+      .session-row span {
+        font-variant-numeric: tabular-nums;
+      }
+
       .panel-status {
         right: 20px;
         bottom: 22px;
@@ -315,11 +345,21 @@
     </section>
 
     <nav class="panel panel-bar">
+      <button id="btn-levels" type="button">레벨</button>
       <button id="btn-example" type="button">예시 불러오기</button>
       <button id="btn-layout" type="button">자동 배치</button>
       <button id="btn-check" class="btn-primary btn-pulse" type="button">검사</button>
       <button id="btn-clear" type="button">초기화</button>
     </nav>
+
+    <section class="panel session-panel" id="session-panel" hidden>
+      <strong id="session-target"></strong>
+      <div class="session-row">
+        <span id="session-progress">1 / 3</span>
+        <span id="session-timer">90초</span>
+        <span id="session-score">점수 0</span>
+      </div>
+    </section>
 
     <section class="panel panel-status" id="status">
       <strong>준비됨.</strong> 목표 분자를 고르고 <em>예시 불러오기</em>를 눌러 시작하세요.

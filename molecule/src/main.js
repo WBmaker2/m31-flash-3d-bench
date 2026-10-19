@@ -10,6 +10,9 @@ import {
   validate,
 } from "./chemistry.js";
 import { checkInvariants } from "./invariants.js";
+import { LEVELS, createSession } from "./session.js";
+import { createProgress } from "../../common/progress.js";
+import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
 
 const WORK_Y = 2.0;
 const MOLECULE_SCALE = 1.45;
@@ -27,6 +30,14 @@ let selectedAtomId = null;
 let placeElement = null;
 let currentTarget = TARGETS[0];
 let pointerStart = null;
+let session = null;
+
+const sessionProgress = createProgress("molecule", { levels: LEVELS.map((level) => ({ id: level.id })) });
+const sessionPanel = document.getElementById("session-panel");
+const sessionTarget = document.getElementById("session-target");
+const sessionProgressText = document.getElementById("session-progress");
+const sessionTimerText = document.getElementById("session-timer");
+const sessionScoreText = document.getElementById("session-score");
 let lastLayout = null;
 
 const statusPanel = document.getElementById("status");
@@ -290,6 +301,22 @@ function checkMolecule() {
     return;
   }
   const result = validate(atoms, bonds, currentTarget);
+  if (session) {
+    const accepted = session.answer(result.ok);
+    if (result.ok) {
+      if (accepted.finished) {
+        finishSession();
+        return;
+      }
+      loadSessionTarget();
+      refreshSessionPanel();
+      setStatus(`<strong>정답!</strong> 다음 문제를 준비했습니다.`);
+    } else {
+      refreshSessionPanel();
+      setStatus("<strong>아직 다릅니다.</strong> 원자 수와 결합을 다시 확인하세요.", true);
+    }
+    return;
+  }
   if (result.ok) {
     setStatus(
       `<strong>정답입니다.</strong> ${currentTarget.label} 완성. ${currentTarget.shape} · 결합각 ${currentTarget.angleDeg}°. ${currentTarget.description}`,
@@ -301,6 +328,83 @@ function checkMolecule() {
   if (!result.centerOk) problems.push(`중심 원자가 ${currentTarget.center}가 아닙니다 (현재 ${result.centerElement ?? "없음"})`);
   if (!result.neighborOk) problems.push("중심 원자에 연결된 원자의 종류·수가 다릅니다");
   setStatus(`<strong>아직 다릅니다.</strong> ${problems.join(" · ")}.`, true);
+}
+
+function openSessionLevels() {
+  showLevelSelect({
+    title: "분자 레벨",
+    levels: LEVELS.map((level) => ({
+      id: level.id,
+      label: `${level.label} · ${level.targets.length}문제 · ${level.timeLimit}초`,
+      stars: sessionProgress.levelState(level.id)?.stars ?? 0,
+      unlocked: sessionProgress.isUnlocked(level.id),
+    })),
+  }).then((result) => {
+    if (!result || !result.levelId) return;
+    const level = LEVELS.find((entry) => entry.id === result.levelId);
+    if (level) startSession(level);
+  });
+}
+
+function startSession(level) {
+  session = createSession(level);
+  sessionPanel.hidden = false;
+  loadSessionTarget();
+  refreshSessionPanel();
+  setStatus(`<strong>${level.label}</strong> ${level.description}`);
+}
+
+function loadSessionTarget() {
+  if (!session) return;
+  const id = session.current;
+  const target = TARGETS.find((entry) => entry.id === id);
+  if (!target) return;
+  currentTarget = target;
+  for (const button of targetButtons.querySelectorAll("button")) {
+    button.disabled = true;
+  }
+  clearAll();
+  loadExample();
+}
+
+function refreshSessionPanel() {
+  if (!session) return;
+  const target = TARGETS.find((entry) => entry.id === session.current);
+  sessionTarget.textContent = target ? `${target.label} 를 만드세요` : "완료";
+  sessionProgressText.textContent = `${Math.min(session.index + 1, session.total)} / ${session.total}`;
+  sessionTimerText.textContent = `${Math.ceil(session.timeLeft)}초`;
+  sessionScoreText.textContent = `점수 ${session.score}`;
+}
+
+function finishSession() {
+  const level = session.level;
+  const bonus = session.timeBonus();
+  const score = session.score + bonus;
+  const stars = session.stars();
+  sessionProgress.record(level.id, { stars, score, timeMs: (level.timeLimit - session.timeLeft) * 1000 });
+  session = null;
+  sessionPanel.hidden = true;
+  for (const button of targetButtons.querySelectorAll("button")) {
+    button.disabled = false;
+  }
+  showResult({
+    kicker: "분자 레벨",
+    title: level.label,
+    stars,
+    score,
+    bestScore: sessionProgress.levelState(level.id)?.bestScore ?? score,
+    rows: [
+      ["맞힌 문제", `${level.targets.length} / ${level.targets.length}`],
+      ["시간 보너스", `+${bonus}`],
+    ],
+    actions: [
+      { id: "retry", label: "다시 하기", primary: true },
+      { id: "levels", label: "레벨 선택" },
+    ],
+  }).then((action) => {
+    if (action === "retry") startSession(level);
+    if (action === "levels") openSessionLevels();
+  });
 }
 
 function setPlaceElement(element) {
@@ -355,6 +459,7 @@ for (const element of ELEMENT_ORDER) {
   elementRow.append(button);
 }
 
+document.getElementById("btn-levels").addEventListener("click", openSessionLevels);
 document.getElementById("btn-example").addEventListener("click", loadExample);
 document.getElementById("btn-layout").addEventListener("click", applyLayout);
 document.getElementById("btn-check").addEventListener("click", checkMolecule);
@@ -512,6 +617,18 @@ window.__gameApi = {
     placeElement,
   }),
   getInvariants: () => invariantProblems,
+  getSession: () =>
+    session
+      ? {
+          level: session.level.id,
+          index: session.index,
+          total: session.total,
+          current: session.current,
+          score: session.score,
+          timeLeft: Math.ceil(session.timeLeft),
+          wrong: session.wrong,
+        }
+      : null,
   getScreenPositions: () =>
     atoms.map((atom) => {
       const projected = atom.group.position.clone().project(stage.camera);
