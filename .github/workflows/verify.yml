@@ -1,0 +1,46 @@
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: 문법 검사
+        run: |
+          find . -path ./node_modules -prune -o \( -name "*.js" -o -name "*.mjs" \) -print \
+            | xargs -n1 node --check
+
+      - name: 단위 테스트
+        run: npm test
+
+      - name: Playwright Chromium 설치
+        run: npx playwright install --with-deps chromium
+
+      - name: 3D 자동 검사 (콘솔 오류 · 기하 불변식 · 화면 판정)
+        run: npm run qa
+
+      - name: vendor 가 저장소와 맞는지 확인
+        run: |
+          npm run vendor
+          git diff --exit-code vendor
+
+      - name: 카드 이미지 · 랜딩 수치 동기화 확인
+        run: node scripts/check-sync.mjs

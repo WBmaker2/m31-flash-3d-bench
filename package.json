@@ -14,7 +14,8 @@
     "qa:shapes": "node scripts/shot.mjs shapes",
     "qa:landing": "node scripts/shot.mjs landing",
     "test": "vitest run",
-    "qa:sync": "node scripts/sync-landing.mjs"
+    "qa:sync": "node scripts/check-sync.mjs",
+    "fonts": "node scripts/sync-fonts.mjs"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
