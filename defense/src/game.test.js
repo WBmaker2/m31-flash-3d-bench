@@ -3,7 +3,15 @@ import * as THREE from "three";
 import { COLS, PATH_CELLS, PATH_POINTS, ROWS, cellToWorld, inBounds, isPathCell, worldToCell } from "./grid.js";
 import { TOWER_TYPES, createTower, updateTower } from "./towers.js";
 import { createEnemy, updateEnemy } from "./enemies.js";
-import { WAVES, buildSpawnQueue, waveEnemyCount } from "./waves.js";
+import {
+  DIFFICULTIES,
+  WAVES,
+  buildSpawnQueue,
+  scoreFor,
+  starsFor,
+  waveEnemyCount,
+  wavesFor,
+} from "./waves.js";
 
 function pathLength() {
   let total = 0;
@@ -182,7 +190,53 @@ describe("웨이브 구성", () => {
     }
   });
 
-  it("웨이브는 5개다", () => {
-    expect(WAVES).toHaveLength(5);
+  it("웨이브는 8개다", () => {
+    expect(WAVES).toHaveLength(8);
+  });
+});
+
+describe("난이도", () => {
+  it("난이도가 3단계다", () => {
+    expect(DIFFICULTIES).toHaveLength(3);
+  });
+
+  it("어려운 난이도일수록 웨이브가 많다", () => {
+    const counts = DIFFICULTIES.map((difficulty) => difficulty.waves);
+    expect(counts[0]).toBeLessThan(counts[1]);
+    expect(counts[1]).toBeLessThan(counts[2]);
+  });
+
+  it("난이도별 웨이브 수가 전체보다 많지 않다", () => {
+    for (const difficulty of DIFFICULTIES) {
+      expect(wavesFor(difficulty).length).toBe(difficulty.waves);
+      expect(wavesFor(difficulty).length).toBeLessThanOrEqual(WAVES.length);
+    }
+  });
+
+  it("웨이브가 8개다", () => {
+    expect(WAVES).toHaveLength(8);
+  });
+});
+
+describe("점수와 별점", () => {
+  it("웨이브를 많이 막을수록 점수가 높다", () => {
+    const good = scoreFor({ kills: 20, livesLeft: 20, lives: 20, wavesCleared: 5 });
+    const bad = scoreFor({ kills: 5, livesLeft: 3, lives: 20, wavesCleared: 1 });
+    expect(good).toBeGreaterThan(bad);
+  });
+
+  it("생명을 다 잃으면 점수가 줄지 않는다", () => {
+    expect(scoreFor({ kills: 0, livesLeft: 0, lives: 20, wavesCleared: 0 })).toBeGreaterThanOrEqual(0);
+  });
+
+  it("승리하고 생명을 다 남기면 3스타", () => {
+    expect(starsFor({ won: true, livesLeft: 20, lives: 20 })).toBe(3);
+    expect(starsFor({ won: true, livesLeft: 10, lives: 20 })).toBe(2);
+    expect(starsFor({ won: true, livesLeft: 2, lives: 20 })).toBe(1);
+  });
+
+  it("패배하면 별점이 낮다", () => {
+    expect(starsFor({ won: false, livesLeft: 0, lives: 20 })).toBe(0);
+    expect(starsFor({ won: false, livesLeft: 5, lives: 20 })).toBe(1);
   });
 });

@@ -84,6 +84,11 @@ export const STEPS = {
       .catch(() => console.log("WARN: 웨이브가 제한 시간 안에 끝나지 않음"));
     await page.waitForTimeout(400);
     await shot("04-웨이브종료");
+    await page.getByRole("button", { name: "난이도" }).click();
+    await page.waitForTimeout(500);
+    await shot("05-난이도");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
   },
   shapes: async (page, shot) => {
     await placeShapesBlocks(page, 2);

@@ -3,11 +3,15 @@ import { createStage, createPicker } from "./stage.js";
 import { COLS, ROWS, PATH_POINTS, cellToWorld, createBoard, inBounds, isPathCell, worldToCell } from "./grid.js";
 import { TOWER_ORDER, TOWER_TYPES, createTower, updateTower } from "./towers.js";
 import { ENEMY_TYPES, createEnemy, disposeEnemy, updateEnemy, updateHealthBar } from "./enemies.js";
-import { WAVES, buildSpawnQueue } from "./waves.js";
+import { DIFFICULTIES, buildSpawnQueue, scoreFor, starsFor, wavesFor } from "./waves.js";
+import { createProgress } from "../../common/progress.js";
+import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
 import { checkInvariants } from "./invariants.js";
 
-const START_GOLD = 250;
-const START_LIVES = 20;
+const difficultyProgress = createProgress("defense", { levels: DIFFICULTIES.map((entry) => ({ id: entry.id })) });
+let difficulty = DIFFICULTIES[1];
+let kills = 0;
+let wavesCleared = 0;
 const BOARD_Y = 0.06;
 
 const canvas = document.getElementById("scene");
@@ -19,8 +23,8 @@ const towers = [];
 const enemies = [];
 const projectiles = [];
 
-let gold = START_GOLD;
-let lives = START_LIVES;
+let gold = difficulty.gold;
+let lives = difficulty.lives;
 let waveIndex = 0;
 let waveActive = false;
 let waveTimer = 0;
@@ -33,6 +37,7 @@ let finished = false;
 const statGold = document.getElementById("stat-gold");
 const statLives = document.getElementById("stat-lives");
 const statWave = document.getElementById("stat-wave");
+const statDifficulty = document.getElementById("stat-difficulty");
 const statEnemies = document.getElementById("stat-enemies");
 const towerRow = document.getElementById("tower-row");
 const btnWave = document.getElementById("btn-wave");
@@ -54,11 +59,13 @@ function toast(message, isBad = false) {
 function refreshStats() {
   statGold.textContent = String(gold);
   statLives.textContent = String(lives);
-  statWave.textContent = `${waveIndex} / ${WAVES.length}`;
+  statWave.textContent = `${waveIndex} / ${difficulty.waves}`;
   statEnemies.textContent = String(enemies.length);
 }
 
 function refreshWaveButton() {
+  statDifficulty.textContent = difficulty.label;
+  statWave.textContent = `${waveIndex} / ${difficulty.waves}`;
   if (finished) {
     btnWave.textContent = "종료";
     btnWave.disabled = true;
@@ -124,9 +131,9 @@ for (const typeId of TOWER_ORDER) {
 }
 
 function startWave() {
-  if (waveActive || waveIndex >= WAVES.length || finished) return;
-  const wave = WAVES[waveIndex];
-  const scale = 1 + waveIndex * 0.18;
+  if (waveActive || waveIndex >= difficulty.waves || finished) return;
+  const wave = wavesFor(difficulty)[waveIndex];
+  const scale = (1 + waveIndex * 0.18) * difficulty.hpScale;
   spawnQueue = buildSpawnQueue(wave).map((event) => ({ ...event, scale }));
   waveTimer = 0;
   waveActive = true;
@@ -155,6 +162,7 @@ function damageEnemy(enemy, amount) {
   if (enemy.hp <= 0) {
     enemy.alive = false;
     gold += enemy.reward;
+    kills += 1;
     removeEnemy(enemy);
   }
 }
@@ -213,13 +221,58 @@ function updateProjectiles(delta) {
 function endWave() {
   waveActive = false;
   waveIndex += 1;
-  if (waveIndex >= WAVES.length) {
+  wavesCleared += 1;
+  if (waveIndex >= difficulty.waves) {
     finished = true;
-    toast("모든 웨이브를 막았습니다. 승리! 🎉");
-  } else {
-    toast(`웨이브 ${waveIndex} 방어 성공!`);
+    finishGame(true);
+    return;
   }
+  toast(`웨이브 ${waveIndex} 방어 성공!`);
   refreshWaveButton();
+}
+
+function finishGame(won) {
+  const stars = starsFor({ won, livesLeft: lives, lives: difficulty.lives });
+  const score = scoreFor({ kills, livesLeft: lives, lives: difficulty.lives, wavesCleared });
+  difficultyProgress.record(difficulty.id, { stars, score, timeMs: 0 });
+  showResult({
+    kicker: won ? "승리" : "패배",
+    title: `${difficulty.label} · ${difficulty.waves}웨이브`,
+    stars,
+    score,
+    bestScore: difficultyProgress.levelState(difficulty.id)?.bestScore ?? score,
+    rows: [
+      ["막은 웨이브", `${wavesCleared} / ${difficulty.waves}`],
+      ["처치한 적", `${kills}마리`],
+      ["남은 생명", `${lives} / ${difficulty.lives}`],
+    ],
+    actions: [
+      { id: "retry", label: "다시 하기", primary: true },
+      { id: "levels", label: "난이도 선택" },
+    ],
+  }).then((action) => {
+    if (action === "retry") resetGame();
+    if (action === "levels") openDifficulties();
+  });
+}
+
+function openDifficulties() {
+  showLevelSelect({
+    title: "난이도 선택",
+    levels: DIFFICULTIES.map((entry) => ({
+      id: entry.id,
+      label: `${entry.label} · ${entry.description}`,
+      stars: difficultyProgress.levelState(entry.id)?.stars ?? 0,
+      unlocked: true,
+    })),
+  }).then((result) => {
+    if (!result || !result.levelId) return;
+    const next = DIFFICULTIES.find((entry) => entry.id === result.levelId);
+    if (next) {
+      difficulty = next;
+      resetGame();
+    }
+  });
 }
 
 function update(delta) {
@@ -241,7 +294,7 @@ function update(delta) {
       removeEnemy(enemy);
       if (lives <= 0) {
         finished = true;
-        toast("생명이 바닥났습니다. 패배!");
+        finishGame(false);
         refreshWaveButton();
       }
     }
@@ -293,6 +346,7 @@ function selectTower(tower) {
 }
 
 btnWave.addEventListener("click", startWave);
+document.getElementById("btn-difficulty").addEventListener("click", openDifficulties);
 
 btnSpeed.addEventListener("click", () => {
   speed = speed === 1 ? 2 : 1;
@@ -314,40 +368,44 @@ btnSell.addEventListener("click", () => {
   toast(`타워를 판매했습니다. (+${refund} 골드)`);
 });
 
-document.getElementById("btn-reset").addEventListener("click", () => {
-  for (const tower of towers) stage.scene.remove(tower.group);
-  for (const enemy of enemies) {
-    stage.scene.remove(enemy.group);
-    disposeEnemy(enemy);
-  }
-  for (const projectile of projectiles) {
-    stage.scene.remove(projectile.mesh);
-    projectile.mesh.geometry.dispose();
-    projectile.mesh.material.dispose();
-  }
-  towers.length = 0;
-  enemies.length = 0;
-  projectiles.length = 0;
-  gold = START_GOLD;
-  lives = START_LIVES;
-  waveIndex = 0;
-  waveActive = false;
-  waveTimer = 0;
-  spawnQueue = [];
-  placing = null;
-  selectedTower = null;
-  finished = false;
-  speed = 1;
-  btnSpeed.textContent = "배속 1×";
-  btnSpeed.setAttribute("aria-pressed", "false");
-  for (const button of towerRow.querySelectorAll("button")) {
-    button.setAttribute("aria-pressed", "false");
-  }
-  refreshInfo();
-  refreshStats();
-  refreshWaveButton();
-  toast("다시 시작했습니다.");
-});
+function resetGame() {
+for (const tower of towers) stage.scene.remove(tower.group);
+for (const enemy of enemies) {
+  stage.scene.remove(enemy.group);
+  disposeEnemy(enemy);
+}
+for (const projectile of projectiles) {
+  stage.scene.remove(projectile.mesh);
+  projectile.mesh.geometry.dispose();
+  projectile.mesh.material.dispose();
+}
+towers.length = 0;
+enemies.length = 0;
+projectiles.length = 0;
+gold = difficulty.gold;
+lives = difficulty.lives;
+kills = 0;
+wavesCleared = 0;
+waveIndex = 0;
+waveActive = false;
+waveTimer = 0;
+spawnQueue = [];
+placing = null;
+selectedTower = null;
+finished = false;
+speed = 1;
+btnSpeed.textContent = "배속 1×";
+btnSpeed.setAttribute("aria-pressed", "false");
+for (const button of towerRow.querySelectorAll("button")) {
+  button.setAttribute("aria-pressed", "false");
+}
+refreshInfo();
+refreshStats();
+refreshWaveButton();
+toast("다시 시작했습니다.");
+}
+
+document.getElementById("btn-reset").addEventListener("click", resetGame);
 
 let pointerStart = null;
 
@@ -452,6 +510,14 @@ window.__gameApi = {
   }),
   board: { COLS, ROWS, pathPoints: PATH_POINTS.length, cellToWorld },
   getInvariants: () => invariantProblems,
+  getDifficulty: () => ({
+    id: difficulty.id,
+    label: difficulty.label,
+    waves: difficulty.waves,
+    kills,
+    wavesCleared,
+    lives,
+  }),
   getScreenPositions: () => {
     const list = [
       ...towers.map((tower) => ({ id: tower.id, position: tower.group.position })),
