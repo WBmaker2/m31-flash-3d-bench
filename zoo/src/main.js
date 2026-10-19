@@ -4,6 +4,10 @@ import { createWorld } from "./world.js";
 import { SPECIES, SPECIES_ORDER } from "./species.js";
 import { buildAnimal, updateAnimal, disposeAnimal } from "./animals.js";
 import { checkInvariants } from "./invariants.js";
+import { FIND_LEVELS, POSE_LABEL, createDex, createFinder } from "./dex.js";
+import { loadState, saveState } from "../../common/storage.js";
+import { createProgress } from "../../common/progress.js";
+import { showLevelSelect, showPanel, showResult, showToast } from "../../common/overlay.js";
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -14,6 +18,19 @@ const animals = [];
 let currentSpecies = "cat";
 let walking = false;
 let nextId = 1;
+
+const dex = createDex();
+for (const key of loadState("zoo", "dex", [])) {
+  const [species, pose] = String(key).split(":");
+  dex.register(species, pose);
+}
+const findProgress = createProgress("zoo", { levels: FIND_LEVELS.map((level) => ({ id: level.id })) });
+let findMode = null;
+
+const findPanel = document.getElementById("find-panel");
+const findTarget = document.getElementById("find-target");
+const findTimer = document.getElementById("find-timer");
+const findScore = document.getElementById("find-score");
 
 const statSpecies = document.getElementById("stat-species");
 const statCount = document.getElementById("stat-count");
@@ -119,7 +136,138 @@ canvas.addEventListener("pointerup", (event) => {
   if (!animal) return;
   animal.hopTimer = animal.hopDuration;
   setSpecies(animal.speciesId);
+  registerDex(animal);
+  if (findMode) answerFind(animal.speciesId);
 });
+
+function registerDex(animal) {
+  const pose = animal.walking ? "walk" : "idle";
+  if (dex.register(animal.speciesId, pose)) {
+    saveState("zoo", "dex", dex.entries().filter((entry) => entry.found).map((entry) => `${entry.species}:${entry.pose}`));
+    toastMessage(`도감 등록: ${SPECIES[animal.speciesId].label} (${POSE_LABEL[pose]})`);
+  }
+}
+
+function toastMessage(message) {
+  showToast(message, "info");
+}
+
+function openDex() {
+  const panel = document.createElement("div");
+  panel.className = "m31-panel";
+  const kicker = document.createElement("p");
+  kicker.className = "m31-kicker";
+  kicker.textContent = "도감";
+  const title = document.createElement("h2");
+  title.className = "m31-title";
+  title.textContent = `${dex.count()} / ${dex.total()} 채집`;
+  const grid = document.createElement("div");
+  grid.className = "dex-grid";
+  for (const entry of dex.entries()) {
+    const cell = document.createElement("div");
+    cell.className = entry.found ? "dex-cell is-found" : "dex-cell";
+    const name = document.createElement("span");
+    name.className = "dex-name";
+    name.textContent = SPECIES[entry.species].label;
+    const pose = document.createElement("span");
+    pose.className = "dex-pose";
+    pose.textContent = entry.found ? POSE_LABEL[entry.pose] : "미등록";
+    cell.append(name, pose);
+    grid.append(cell);
+  }
+  panel.append(kicker, title, grid);
+  showPanel(panel);
+}
+
+function openFindLevels() {
+  showLevelSelect({
+    title: "찾기 게임",
+    levels: FIND_LEVELS.map((level) => ({
+      id: level.id,
+      label: `${level.label} · ${level.rounds}마리 · ${level.timeLimit}초`,
+      stars: findProgress.levelState(level.id)?.stars ?? 0,
+      unlocked: findProgress.isUnlocked(level.id),
+    })),
+  }).then((result) => {
+    if (!result || !result.levelId) return;
+    const level = FIND_LEVELS.find((entry) => entry.id === result.levelId);
+    if (level) startFind(level);
+  });
+}
+
+function ensureSpecies(speciesId) {
+  if (animals.some((animal) => animal.speciesId === speciesId)) return;
+  const animal = addAnimal(speciesId);
+  animal.walking = true;
+}
+
+function startFind(level) {
+  findMode = { level, finder: createFinder(level), timeLeft: level.timeLimit };
+  ensureSpecies(findMode.finder.current);
+  walking = true;
+  btnWalk.setAttribute("aria-pressed", "true");
+  btnWalk.textContent = "멈추기";
+  for (const animal of animals) animal.walking = true;
+  findPanel.hidden = false;
+  refreshFindPanel();
+}
+
+function endFind() {
+  const mode = findMode;
+  findMode = null;
+  findPanel.hidden = true;
+  if (!mode) return;
+  const level = mode.level;
+  const bonus = mode.finder.timeBonus(mode.timeLeft);
+  const score = mode.finder.score + bonus;
+  const stars = mode.finder.streak >= level.rounds ? 3 : mode.finder.streak >= Math.ceil(level.rounds / 2) ? 2 : 1;
+  findProgress.record(level.id, { stars, score, timeMs: (level.timeLimit - mode.timeLeft) * 1000 });
+  showResult({
+    kicker: "찾기 게임",
+    title: level.label,
+    stars,
+    score,
+    bestScore: findProgress.levelState(level.id)?.bestScore ?? score,
+    rows: [
+      ["찾은 수", `${mode.finder.index} / ${level.rounds}마리`],
+      ["남은 시간 보너스", `+${bonus}`],
+    ],
+    actions: [
+      { id: "retry", label: "다시 하기", primary: true },
+      { id: "levels", label: "레벨 선택" },
+    ],
+  }).then((action) => {
+    if (action === "retry") startFind(level);
+    if (action === "levels") openFindLevels();
+  });
+}
+
+function answerFind(speciesId) {
+  if (!findMode) return;
+  const result = findMode.finder.answer(speciesId);
+  if (result.correct) {
+    findMode.timeLeft = Math.min(findMode.level.timeLimit, findMode.timeLeft + 2);
+    if (findMode.finder.finished) {
+      endFind();
+      return;
+    }
+    ensureSpecies(findMode.finder.current);
+  } else {
+    findMode.timeLeft = Math.max(0, findMode.timeLeft - findMode.level.wrongPenalty);
+  }
+  refreshFindPanel();
+}
+
+function refreshFindPanel() {
+  if (!findMode) return;
+  const target = findMode.finder.current;
+  findTarget.textContent = target ? `${SPECIES[target].label}를 찾아보세요` : "완료";
+  findTimer.textContent = `${Math.ceil(findMode.timeLeft)}초`;
+  findScore.textContent = `점수 ${findMode.finder.score} · 연속 ${findMode.finder.streak} · 남은 목표 ${findMode.finder.queue.length - findMode.finder.index}`;
+}
+
+document.getElementById("btn-dex").addEventListener("click", openDex);
+document.getElementById("btn-find").addEventListener("click", openFindLevels);
 
 const VIEWS = {
   card: { position: [2.9, 2.05, 4.4], target: [0.2, 0.9, 0.1] },
@@ -168,6 +316,14 @@ function updateInvariants(delta) {
 
 stage.start((delta, elapsed) => {
   for (const animal of animals) updateAnimal(animal, delta, elapsed, stage.camera);
+  if (findMode) {
+    findMode.timeLeft -= delta;
+    if (findMode.timeLeft <= 0) {
+      endFind();
+    } else {
+      refreshFindPanel();
+    }
+  }
   updateInvariants(delta);
 });
 
@@ -183,6 +339,17 @@ window.__gameApi = {
     speciesList: animals.map((animal) => animal.speciesId),
   }),
   getInvariants: () => invariantProblems,
+  getDex: () => ({ count: dex.count(), total: dex.total(), entries: dex.entries() }),
+  getFind: () =>
+    findMode
+      ? {
+          level: findMode.level.id,
+          target: findMode.finder.current,
+          index: findMode.finder.index,
+          score: findMode.finder.score,
+          timeLeft: Math.ceil(findMode.timeLeft),
+        }
+      : null,
   setChrome: (options = {}) => {
     if (options.labels === false) {
       for (const animal of animals) animal.label.visible = false;
@@ -193,7 +360,7 @@ window.__gameApi = {
   },
   getScreenPositions: () =>
     animals.map((animal) => {
-      const projected = animal.group.position.clone().project(stage.camera);
+      const projected = animal.proxy.getWorldPosition(new THREE.Vector3()).project(stage.camera);
       return {
         id: animal.id,
         x: projected.x,

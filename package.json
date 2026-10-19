@@ -12,7 +12,8 @@
     "qa:defense": "node scripts/shot.mjs defense",
     "qa:shapes": "node scripts/shot.mjs shapes",
     "qa:landing": "node scripts/shot.mjs landing",
-    "test": "vitest run"
+    "test": "vitest run",
+    "qa:sync": "node scripts/sync-landing.mjs"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",

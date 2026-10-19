@@ -106,14 +106,15 @@ function openPanel(panel) {
       resolve(null);
     });
     dialog.addEventListener("click", (event) => {
-      const target = event.target;
-      if (target instanceof HTMLElement) {
-        const action = target.dataset.action;
+      const origin = event.target instanceof HTMLElement ? event.target : null;
+      const actionable = origin?.closest?.("[data-action], [data-level]") ?? null;
+      if (actionable instanceof HTMLElement) {
+        const action = actionable.dataset.action;
         if (action) {
           finish(action);
           return;
         }
-        const levelId = target.dataset.level;
+        const levelId = actionable.dataset.level;
         if (levelId) {
           finish({ levelId });
           return;
@@ -125,6 +126,10 @@ function openPanel(panel) {
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
   });
+}
+
+export function showPanel(panel) {
+  return openPanel(panel);
 }
 
 export function showResult(options = {}) {

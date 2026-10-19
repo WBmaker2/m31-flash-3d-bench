@@ -172,4 +172,5 @@ const checks = {
 };
 await writeFile(CHECKS_FILE, `${JSON.stringify(checks, null, 2)}\n`);
 console.log(`\nCHECKS ${CHECKS_FILE}`);
+await run("node", [path.join(HERE, "sync-landing.mjs")], { cwd: ROOT });
 console.log(JSON.stringify(checks, null, 2));

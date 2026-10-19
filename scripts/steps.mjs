@@ -31,6 +31,22 @@ export const STEPS = {
     await page.getByRole("button", { name: "모두 걷기" }).click();
     await page.waitForTimeout(1200);
     await shot("04-걷기");
+    const positions = await page.evaluate(() => window.__gameApi?.getScreenPositions?.() ?? []);
+    const animal = positions.find((entry) => entry.visible);
+    if (animal) {
+      await page.mouse.click(((animal.x + 1) / 2) * 1280, ((1 - animal.y) / 2) * 800);
+      await page.waitForTimeout(500);
+    }
+    await page.getByRole("button", { name: "도감" }).click();
+    await page.waitForTimeout(500);
+    await shot("05-도감");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: "찾기 게임" }).click();
+    await page.waitForTimeout(500);
+    await shot("06-찾��레벨");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
   },
   molecule: async (page, shot) => {
     await page.getByRole("button", { name: "물 (H₂O)" }).click();
