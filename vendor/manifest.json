@@ -1,0 +1,8 @@
+{
+  "version": "0.186.1",
+  "files": [
+    "addons/controls/OrbitControls.js",
+    "three.core.js",
+    "three.module.js"
+  ]
+}

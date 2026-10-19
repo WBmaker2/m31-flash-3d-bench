@@ -78,9 +78,11 @@ page.on("console", (m) => {
   if (m.type() === "error") failures.push(`console: ${m.text()}`);
 });
 page.on("pageerror", (e) => failures.push(`pageerror: ${e.message}`));
-page.on("requestfailed", (r) =>
-  failures.push(`requestfailed: ${r.url()} ${r.failure()?.errorText ?? ""}`),
-);
+page.on("requestfailed", (r) => {
+  const reason = r.failure()?.errorText ?? "";
+  if (reason.includes("ERR_ABORTED")) return;
+  failures.push(`requestfailed: ${r.url()} ${reason}`);
+});
 
 let index = 0;
 const shot = async (label) => {

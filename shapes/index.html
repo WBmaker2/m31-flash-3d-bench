@@ -194,14 +194,6 @@
         color: var(--accent);
       }
     </style>
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.186.1/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/"
-        }
-      }
-    </script>
   </head>
 
   <body>
@@ -240,6 +232,32 @@
       <b>R</b> 회전 · <b>Q</b> 반대 회전 · <b>Z</b> 되돌리기 · <b>드래그</b> 시점 · <b>휠</b> 확대
     </p>
 
-    <script type="module" src="./src/main.js"></script>
+    <script>
+      (async () => {
+        const localMap = {
+          imports: {
+            three: "../vendor/three.module.js",
+            "three/addons/": "../vendor/addons/",
+          },
+        };
+        const remoteMap = {
+          imports: {
+            three: "https://unpkg.com/three@0.186.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/",
+          },
+        };
+        let map = localMap;
+        try {
+          await import("../vendor/three.module.js");
+        } catch {
+          map = remoteMap;
+        }
+        const tag = document.createElement("script");
+        tag.type = "importmap";
+        tag.textContent = JSON.stringify(map);
+        document.head.append(tag);
+        await import("./src/main.js");
+      })();
+    </script>
   </body>
 </html>

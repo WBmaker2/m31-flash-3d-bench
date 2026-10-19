@@ -8,7 +8,7 @@ export function createStage(canvas) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xefe6d5);
@@ -56,14 +56,15 @@ export function createStage(canvas) {
   resize();
   window.addEventListener("resize", resize);
 
-  const clock = new THREE.Clock();
+  const timer = new THREE.Timer();
   const STEP = 1 / 60;
 
   function start(update) {
     let accumulator = 0;
     let elapsed = 0;
     renderer.setAnimationLoop(() => {
-      const delta = Math.min(clock.getDelta(), 0.1);
+      timer.update();
+      const delta = Math.min(timer.getDelta(), 0.1);
       accumulator = Math.min(accumulator + delta, 0.25);
       while (accumulator >= STEP) {
         elapsed += STEP;

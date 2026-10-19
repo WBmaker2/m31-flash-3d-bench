@@ -315,14 +315,6 @@
         border-color: rgba(87, 196, 190, 0.5);
       }
     </style>
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.186.1/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/"
-        }
-      }
-    </script>
   </head>
   <body>
     <a class="back-link" href="../index.html">&#8592; GAMES</a>
@@ -367,6 +359,32 @@
 
     <p class="hint">원자 클릭: 선택 · 원자 두 개 클릭: 결합 · 결합 클릭: 삭제 · 빈 곳 클릭: 새 원자</p>
 
-    <script type="module" src="./src/main.js"></script>
+    <script>
+      (async () => {
+        const localMap = {
+          imports: {
+            three: "../vendor/three.module.js",
+            "three/addons/": "../vendor/addons/",
+          },
+        };
+        const remoteMap = {
+          imports: {
+            three: "https://unpkg.com/three@0.186.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/",
+          },
+        };
+        let map = localMap;
+        try {
+          await import("../vendor/three.module.js");
+        } catch {
+          map = remoteMap;
+        }
+        const tag = document.createElement("script");
+        tag.type = "importmap";
+        tag.textContent = JSON.stringify(map);
+        document.head.append(tag);
+        await import("./src/main.js");
+      })();
+    </script>
   </body>
 </html>

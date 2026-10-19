@@ -152,7 +152,11 @@ node scripts/shot.mjs landing
 
 ## 공통 기술 결정
 
-- `three@0.186.1` 고정, `importmap` 으로 `three` 와 `three/addons/` 매핑.
+- `three@0.186.1` 고정. **저장소 안 `vendor/` 에서 먼저 불러오고, 없으면 CDN으로 되돌아갑니다.**
+  (`index.html` 이 importmap을 동적으로 만들어 로컬 우선 → CDN 폴백을 구성합니다.)
+  학교망처럼 CDN이 막힌 환경에서도 게임이 뜨고, 로컬에서 실행할 때는 네트워크가 필요 없습니다.
+- `vendor/` 는 `npm run vendor` 로 `node_modules/three` 에서 다시 복사할 수 있습니다.
+- `THREE.Clock` → `THREE.Timer` (three r186 에서 Clock 은 폐기 예정), `PCFSoftShadowMap` → `PCFShadowMap` (r186 에서 삭제되어 조용히 대체되고 있었습니다).
 - `THREE.OrbitControls` 전역 접근 금지(라이브러리에서 제거됨) → `three/addons/controls/OrbitControls.js` import.
 - 포인터 좌표는 `canvas.getBoundingClientRect()` 기준. `window.innerWidth`를 쓰면 캔버스 오프셋에서 어긋난다.
 - `renderer.setSize(w, h, false)` — CSS 크기는 CSS가, 버퍼 크기는 JS가 담당.
