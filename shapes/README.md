@@ -17,6 +17,7 @@ python3 -m http.server 5174
 - **R / Q** — 블록 회전 (서로 다른 모양만 순환)
 - **Z** — 마지막 블록 되돌리기
 - **레벨 선택** — 레벨 창 (별점과 잠금 상태 표시)
+- **다음 단계** — 모양을 완성하면 결과 팝업에 뜹니다. 누르면 다음 레벨로 이어집니다.
 
 ## 구조
 
@@ -27,7 +28,7 @@ python3 -m http.server 5174
 | `src/levels.js` | 레벨 8종 (목표 칸 · 제공 블록 · 최소 블록 수) |
 | `src/assembly.js` | 배치·겹침·완료 판정 + 점수 계산 (순수 함수) |
 | `src/invariants.js` | 기하 불변식 (목표 밖 배치 · 블록 겹침 · 격자 밖 칸) |
-| `src/shapes.test.js` | 단위 테스트 25개 (회전군 · 배치 판정 · 레벨 데이터) |
+| `src/shapes.test.js` | 단위 테스트 26개 (회전군 · 배치 판정 · 레벨 데이터) |
 | `src/main.js` | 3D 씬, 트레이, 미리보기, 레벨 진행, 결과 화면 |
 | `src/stage.js` | 렌더러·조명·사선 격자 바닥·고정 스텝 루프·피킹 |
 
@@ -53,5 +54,5 @@ python3 -m http.server 5174
 
 ```bash
 node ../scripts/shot.mjs shapes   # 4시점 캡처 + 자동 판정
-npx vitest run shapes             # 단위 테스트 25개
+npx vitest run shapes             # 단위 테스트 26개
 ```

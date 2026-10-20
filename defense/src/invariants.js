@@ -1,6 +1,7 @@
 import { COLS, ROWS, inBounds, isPathCell } from "./grid.js";
 
 export const MIN_PATH_CLEARANCE = 0.5;
+export const MIN_ENEMY_GAP_M = 0.3;
 
 export function checkInvariants({ towers, enemies, pathPoints }) {
   const problems = [];
@@ -53,13 +54,20 @@ export function checkInvariants({ towers, enemies, pathPoints }) {
     }
   }
 
-  const occupied = new Map();
-  for (const enemy of enemies) {
-    const key = `${Math.round(enemy.group.position.x * 2)},${Math.round(enemy.group.position.z * 2)}`;
-    if (occupied.has(key)) {
-      problems.push({ code: "enemies-overlap", message: "두 적이 같은 칸에 겹쳐 있습니다." });
+  // 두 적이 실제로 같은 자리에 있을 때만 겹침으로 본다.
+  // 0.5 m 격자로 묶어 비교하면 살짝 가까운 경우도 겹침으로 잡혔다.
+  for (let i = 0; i < enemies.length; i += 1) {
+    for (let j = i + 1; j < enemies.length; j += 1) {
+      const a = enemies[i].group.position;
+      const b = enemies[j].group.position;
+      const distance = Math.hypot(a.x - b.x, a.z - b.z);
+      if (distance < MIN_ENEMY_GAP_M) {
+        problems.push({
+          code: "enemies-overlap",
+          message: `두 적이 겹쳐 있습니다 (거리 ${distance.toFixed(2)} m).`,
+        });
+      }
     }
-    occupied.set(key, true);
   }
 
   if (towers.length > COLS * ROWS) {

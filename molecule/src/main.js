@@ -213,6 +213,20 @@ function finishSession() {
   session = null;
   ui.showSession(null);
   ui.lockTargets(false);
+  const levelIndex = LEVELS.findIndex((entry) => entry.id === level.id);
+  const nextLevel = levelIndex >= 0 ? LEVELS[levelIndex + 1] : null;
+  // 단계를 통과하면 다음 단계로 바로 이어 갈 수 있게 첫 버튼으로 둔다.
+  const actions = nextLevel
+    ? [
+        { id: "next", label: "다음 단계", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+        { id: "levels", label: "레벨 선택" },
+      ]
+    : [
+        { id: "first", label: "처음부터", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+        { id: "levels", label: "레벨 선택" },
+      ];
   showResult({
     kicker: "분자 레벨",
     title: level.label,
@@ -223,11 +237,10 @@ function finishSession() {
       ["맞힌 문제", `${level.targets.length} / ${level.targets.length}`],
       ["시간 보너스", `+${bonus}`],
     ],
-    actions: [
-      { id: "retry", label: "다시 하기", primary: true },
-      { id: "levels", label: "레벨 선택" },
-    ],
+    actions,
   }).then((action) => {
+    if (action === "next" && nextLevel) startSession(nextLevel);
+    if (action === "first") startSession(LEVELS[0]);
     if (action === "retry") startSession(level);
     if (action === "levels") openSessionLevels();
   });

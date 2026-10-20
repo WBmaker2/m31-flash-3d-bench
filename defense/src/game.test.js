@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { COLS, PATH_CELLS, PATH_POINTS, ROWS, cellToWorld, inBounds, isPathCell, worldToCell } from "./grid.js";
 import { TOWER_TYPES, createTower, updateTower } from "./towers.js";
 import { createEnemy, updateEnemy } from "./enemies.js";
+import { checkInvariants, MIN_ENEMY_GAP_M } from "./invariants.js";
 import {
   DIFFICULTIES,
   WAVES,
@@ -238,5 +239,32 @@ describe("점수와 별점", () => {
   it("패배하면 별점이 낮다", () => {
     expect(starsFor({ won: false, livesLeft: 0, lives: 20 })).toBe(0);
     expect(starsFor({ won: false, livesLeft: 5, lives: 20 })).toBe(1);
+  });
+});
+
+describe("기하 불변식", () => {
+  function enemyAt(x, z) {
+    return { group: { position: new THREE.Vector3(x, 0, z) }, progress: 1 };
+  }
+
+  function towerAt(cell) {
+    return { group: { position: new THREE.Vector3(cellToWorld(cell.cx, cell.cz).x, 0, cellToWorld(cell.cx, cell.cz).z) }, cell };
+  }
+
+  it("길 위의 타워는 위반으로 잡는다", () => {
+    const pathCell = [...PATH_CELLS][0].split(",").map(Number);
+    const problems = checkInvariants({ towers: [towerAt({ cx: pathCell[0], cz: pathCell[1] })], enemies: [], pathPoints: PATH_POINTS });
+    expect(problems.some((problem) => problem.code === "tower-on-path")).toBe(true);
+  });
+
+  it("같은 자리에 겹친 적만 위반으로 잡는다", () => {
+    const overlapped = checkInvariants({ towers: [], enemies: [enemyAt(2, 2), enemyAt(2.05, 2)], pathPoints: PATH_POINTS });
+    expect(overlapped.some((problem) => problem.code === "enemies-overlap")).toBe(true);
+  });
+
+  it("조금 떨어진 적은 위반이 아니다", () => {
+    const gap = MIN_ENEMY_GAP_M * 1.5;
+    const apart = checkInvariants({ towers: [], enemies: [enemyAt(2, 2), enemyAt(2 + gap, 2)], pathPoints: PATH_POINTS });
+    expect(apart.some((problem) => problem.code === "enemies-overlap")).toBe(false);
   });
 });

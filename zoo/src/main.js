@@ -223,6 +223,20 @@ function endFind() {
   const score = mode.finder.score + bonus;
   const stars = mode.finder.streak >= level.rounds ? 3 : mode.finder.streak >= Math.ceil(level.rounds / 2) ? 2 : 1;
   findProgress.record(level.id, { stars, score, timeMs: (level.timeLimit - mode.timeLeft) * 1000 });
+  const levelIndex = FIND_LEVELS.findIndex((entry) => entry.id === level.id);
+  const nextLevel = levelIndex >= 0 ? FIND_LEVELS[levelIndex + 1] : null;
+  // 단계를 통과하면 다음 단계로 바로 이어 갈 수 있게 첫 버튼으로 둔다.
+  const actions = nextLevel
+    ? [
+        { id: "next", label: "다음 단계", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+        { id: "levels", label: "레벨 선택" },
+      ]
+    : [
+        { id: "first", label: "처음부터", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+        { id: "levels", label: "레벨 선택" },
+      ];
   showResult({
     kicker: "찾기 게임",
     title: level.label,
@@ -233,11 +247,10 @@ function endFind() {
       ["찾은 수", `${mode.finder.index} / ${level.rounds}마리`],
       ["남은 시간 보너스", `+${bonus}`],
     ],
-    actions: [
-      { id: "retry", label: "다시 하기", primary: true },
-      { id: "levels", label: "레벨 선택" },
-    ],
+    actions,
   }).then((action) => {
+    if (action === "next" && nextLevel) startFind(nextLevel);
+    if (action === "first") startFind(FIND_LEVELS[0]);
     if (action === "retry") startFind(level);
     if (action === "levels") openFindLevels();
   });

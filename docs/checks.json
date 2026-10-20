@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T06:05:56.557Z",
+  "generatedAt": "2026-10-20T06:31:10.865Z",
   "games": {
     "zoo": {
       "tests": 25,
@@ -14,7 +14,7 @@
       "viewDiffPercent": 21
     },
     "defense": {
-      "tests": 25,
+      "tests": 28,
       "consoleErrors": 0,
       "invariantViolations": 0,
       "viewDiffPercent": 20
@@ -34,8 +34,8 @@
   },
   "totals": {
     "games": 5,
-    "tests": 178,
-    "gameTests": 161,
+    "tests": 181,
+    "gameTests": 164,
     "commonTests": 17,
     "views": 15,
     "consoleErrors": 0,

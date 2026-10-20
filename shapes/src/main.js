@@ -229,6 +229,19 @@ function checkComplete() {
   const stars = used <= par ? 3 : used <= par + 1 ? 2 : 1;
   const score = scoreFor({ par, used, timeMs });
   const record = progress.record(level.id, { stars, score, timeMs });
+  const hasNext = levelIndex + 1 < LEVELS.length;
+  // 단계를 통과하면 다음 단계로 바로 이어 갈 수 있게 첫 버튼으로 둔다.
+  const actions = hasNext
+    ? [
+        { id: "next", label: "다음 단계", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+        { id: "levels", label: "레벨 선택" },
+      ]
+    : [
+        { id: "first", label: "처음부터", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+        { id: "levels", label: "레벨 선택" },
+      ];
   showToast("목표 모양 완성!", "info");
   showResult({
     kicker: `레벨 ${String(levelIndex + 1).padStart(2, "0")}`,
@@ -240,12 +253,15 @@ function checkComplete() {
       ["사용 블록", `${used}개 (최소 ${par}개)`],
       ["소요 시간", `${(timeMs / 1000).toFixed(1)}초`],
     ],
-    detail: record.unlocked.length > 0 ? "다음 레벨이 열렸습니다." : "",
-    actions: [
-      { id: "retry", label: "다시 하기", primary: true },
-      { id: "levels", label: "레벨 선택" },
-    ],
+    detail: hasNext
+      ? "다음 단계가 열렸습니다."
+      : record.unlocked.length > 0
+        ? "다음 레벨이 열렸습니다."
+        : "",
+    actions,
   }).then((action) => {
+    if (action === "next") loadLevel(levelIndex + 1);
+    if (action === "first") loadLevel(0);
     if (action === "retry") loadLevel(levelIndex);
     if (action === "levels") openLevels();
   });

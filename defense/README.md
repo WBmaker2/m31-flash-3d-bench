@@ -18,6 +18,7 @@ python3 -m http.server 5174
 - **배속 1× / 2×** — 진행 속도를 바꿉니다.
 - **타워 클릭** — 해당 타워를 선택하면 정보 패널이 뜹니다. **판매**를 누르면 설치 비용의 60%를 돌려받습니다.
 - **다시 시작** — 초기 상태로 돌아갑니다.
+- **다음 난이도** — 난이도를 이기면 결과 팝업에 뜹니다. 누르면 다음 난이도로 이어집니다.
 
 ## 규칙
 
@@ -36,7 +37,7 @@ python3 -m http.server 5174
 | `src/enemies.js` | 적 종류 정의, 경로 이동, 체력바 |
 | `src/waves.js` | 웨이브 구성(8종)·난이도 3단계·점수/별점 계산 (테스트 가능한 순수 로직) |
 | `src/invariants.js` | 기하 불변식 (타워가 길 위인가, 적 겹침, 좌표 유한성) |
-| `src/game.test.js` | 유닛 테스트 17개 (경로·이동·조준·웨이브) |
+| `src/game.test.js` | 유닛 테스트 28개 (경로·이동·조준·웨이브·불변식) |
 | `src/main.js` | 웨이브 관리, 발사체, 골드·생명, UI 배선, 불변식 배선, 상태 조회 API |
 
 ## 설계 메모
@@ -53,7 +54,7 @@ python3 -m http.server 5174
 
 ```bash
 node ../scripts/shot.mjs defense         # 4시점 캡처 + 자동 판정
-npx vitest run defense                 # 유닛 테스트 25개
+npx vitest run defense                 # 유닛 테스트 28개
 ```
 
 `src/invariants.js`가 매 0.5초마다 검사하고, 위반이 있으면 화면 하단에 배지가 뜹니다.

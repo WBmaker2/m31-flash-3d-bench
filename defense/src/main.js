@@ -236,6 +236,26 @@ function finishGame(won) {
   const stars = starsFor({ won, livesLeft: lives, lives: difficulty.lives });
   const score = scoreFor({ kills, livesLeft: lives, lives: difficulty.lives, wavesCleared });
   difficultyProgress.record(difficulty.id, { stars, score, timeMs: 0 });
+  const difficultyIndex = DIFFICULTIES.findIndex((entry) => entry.id === difficulty.id);
+  const nextDifficulty = difficultyIndex >= 0 ? DIFFICULTIES[difficultyIndex + 1] : null;
+  // 이 게임의 단계는 "난이도" 다. 승리했을 때 다음 난이도로 이어 갈 수 있게 첫 버튼으로 둔다.
+  const actions =
+    won && nextDifficulty
+      ? [
+          { id: "next", label: "다음 난이도", primary: true, pulse: true },
+          { id: "retry", label: "다시 하기" },
+          { id: "levels", label: "난이도 선택" },
+        ]
+      : won
+        ? [
+            { id: "first", label: "처음부터", primary: true, pulse: true },
+            { id: "retry", label: "다시 하기" },
+            { id: "levels", label: "난이도 선택" },
+          ]
+        : [
+            { id: "retry", label: "다시 하기", primary: true },
+            { id: "levels", label: "난이도 선택" },
+          ];
   showResult({
     kicker: won ? "승리" : "패배",
     title: `${difficulty.label} · ${difficulty.waves}웨이브`,
@@ -247,11 +267,16 @@ function finishGame(won) {
       ["처치한 적", `${kills}마리`],
       ["남은 생명", `${lives} / ${difficulty.lives}`],
     ],
-    actions: [
-      { id: "retry", label: "다시 하기", primary: true },
-      { id: "levels", label: "난이도 선택" },
-    ],
+    actions,
   }).then((action) => {
+    if (action === "next" && nextDifficulty) {
+      difficulty = nextDifficulty;
+      resetGame();
+    }
+    if (action === "first") {
+      difficulty = DIFFICULTIES[0];
+      resetGame();
+    }
     if (action === "retry") resetGame();
     if (action === "levels") openDifficulties();
   });
@@ -428,7 +453,7 @@ canvas.addEventListener("pointerup", (event) => {
   }
 
   const proxies = towers.map((tower) => tower.proxy);
-  const hits = pick(event.clientX, event.clientY, proxies);
+  const hits = pick.pick(event.clientX, event.clientY, proxies);
   if (hits.length > 0) {
     const tower = towers.find((entry) => entry.proxy === hits[0].object);
     if (tower) selectTower(tower);
