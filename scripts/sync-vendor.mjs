@@ -44,7 +44,10 @@ if (!(await exists(THREE_DIR))) {
   process.exit(1);
 }
 
-await rm(VENDOR, { recursive: true, force: true });
+await rm(path.join(VENDOR, "addons"), { recursive: true, force: true });
+await rm(path.join(VENDOR, "three.module.js"), { force: true });
+await rm(path.join(VENDOR, "three.core.js"), { force: true });
+await rm(path.join(VENDOR, "manifest.json"), { force: true });
 await mkdir(path.join(VENDOR, "addons"), { recursive: true });
 
 const seen = new Set();
@@ -56,6 +59,7 @@ for (const entry of ADDON_ENTRIES) {
 const files = [];
 async function walk(dir) {
   for (const name of await readdir(dir)) {
+    if (name === "fonts") continue;
     const full = path.join(dir, name);
     const info = await stat(full);
     if (info.isDirectory()) await walk(full);
