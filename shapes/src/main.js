@@ -10,6 +10,7 @@ import {
   scoreFor,
 } from "./assembly.js";
 import { checkInvariants } from "./invariants.js";
+import { createInvariantBadge, createViewController } from "../../common/ui-kit.js";
 import { createProgress, starsFor } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
 
@@ -49,7 +50,6 @@ let ghostCells = [];
 let trayEntries = [];
 let invariantProblems = [];
 let invariantTimer = 0;
-let invariantBadge = null;
 
 function cellToWorld(cell) {
   const half = (GRID_SIZE - 1) / 2;
@@ -342,27 +342,14 @@ canvas.addEventListener("pointermove", (event) => {
   pointerPosition = { x: event.clientX, y: event.clientY };
 });
 
-function renderInvariantBadge(problems) {
-  if (!invariantBadge) {
-    invariantBadge = document.createElement("div");
-    invariantBadge.style.cssText =
-      "position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:6;padding:7px 14px;border-radius:11px;font:600 12.5px/1.45 system-ui,sans-serif;background:#3a1414;color:#ffb0a5;border:1px solid rgba(255,107,92,.65);display:none;pointer-events:none;max-width:72vw";
-    document.body.append(invariantBadge);
-  }
-  if (problems.length === 0) {
-    invariantBadge.style.display = "none";
-    return;
-  }
-  invariantBadge.style.display = "block";
-  invariantBadge.textContent = `불변식 위반 ${problems.length}건 · ${problems[0].message}`;
-}
+const badge = createInvariantBadge({ bottom: "86px" });
 
 function updateInvariants(delta) {
   invariantTimer += delta;
   if (invariantTimer < 0.5) return;
   invariantTimer = 0;
   invariantProblems = checkInvariants({ placements, target: level.target });
-  renderInvariantBadge(invariantProblems);
+  badge.show(invariantProblems);
   if (invariantProblems.length > 0) {
     console.error(`[불변식 위반] ${invariantProblems.map((problem) => problem.message).join(" | ")}`);
   }
@@ -375,16 +362,8 @@ const VIEWS = {
   side: { position: [7.6, 1.8, 0], target: [0, 0.8, 0.3] },
   top: { position: [0, 9, 0.02], target: [0, 0.4, 0.2] },
 };
+const views = createViewController(stage, VIEWS);
 
-let currentView = "default";
-
-function setView(name) {
-  currentView = VIEWS[name] ? name : "default";
-  const view = VIEWS[currentView];
-  stage.camera.position.set(...view.position);
-  stage.controls.target.set(...view.target);
-  stage.controls.update();
-}
 
 stage.start((delta, elapsed) => {
   const orientation = currentOrientation();
@@ -453,7 +432,7 @@ window.__gameApi = {
     });
     return [...cells, ...tray];
   },
-  setView,
+  setView: views.setView,
   setChrome: (options = {}) => {
     if (options.labels === false) {
       for (const entry of trayEntries) entry.group.visible = false;

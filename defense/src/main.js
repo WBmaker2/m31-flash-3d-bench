@@ -7,6 +7,7 @@ import { DIFFICULTIES, buildSpawnQueue, scoreFor, starsFor, wavesFor } from "./w
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
 import { checkInvariants } from "./invariants.js";
+import { createInvariantBadge, createViewController } from "../../common/ui-kit.js";
 
 const difficultyProgress = createProgress("defense", { levels: DIFFICULTIES.map((entry) => ({ id: entry.id })) });
 let difficulty = DIFFICULTIES[1];
@@ -445,6 +446,7 @@ const VIEWS = {
   side: { position: [15, 3.4, 0], target: [0, 0.6, 0] },
   top: { position: [0, 17, 0.02], target: [0, 0, 0] },
 };
+const views = createViewController(stage, VIEWS);
 
 function setView(name) {
   const view = VIEWS[name] ?? VIEWS.default;
@@ -453,31 +455,16 @@ function setView(name) {
   stage.controls.update();
 }
 
-let invariantBadge = null;
+const badge = createInvariantBadge();
 let invariantProblems = [];
 let invariantTimer = 0;
-
-function renderInvariantBadge(problems) {
-  if (!invariantBadge) {
-    invariantBadge = document.createElement("div");
-    invariantBadge.style.cssText =
-      "position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:6;padding:7px 14px;border-radius:11px;font:600 12.5px/1.45 system-ui,sans-serif;background:#3a1414;color:#ffb0a5;border:1px solid rgba(255,107,92,.65);display:none;pointer-events:none;max-width:72vw";
-    document.body.append(invariantBadge);
-  }
-  if (problems.length === 0) {
-    invariantBadge.style.display = "none";
-    return;
-  }
-  invariantBadge.style.display = "block";
-  invariantBadge.textContent = `불변식 위반 ${problems.length}건 · ${problems[0].message}`;
-}
 
 function updateInvariants(delta) {
   invariantTimer += delta;
   if (invariantTimer < 0.5) return;
   invariantTimer = 0;
   invariantProblems = checkInvariants({ towers, enemies, pathPoints: PATH_POINTS });
-  renderInvariantBadge(invariantProblems);
+  badge.show(invariantProblems);
   if (invariantProblems.length > 0) {
     console.error(`[불변식 위반] ${invariantProblems.map((problem) => problem.message).join(" | ")}`);
   }
@@ -533,5 +520,5 @@ window.__gameApi = {
       };
     });
   },
-  setView,
+  setView: views.setView,
 };

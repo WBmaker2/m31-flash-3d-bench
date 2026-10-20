@@ -4,6 +4,7 @@ import { createWorld } from "./world.js";
 import { SPECIES, SPECIES_ORDER } from "./species.js";
 import { buildAnimal, updateAnimal, disposeAnimal } from "./animals.js";
 import { checkInvariants } from "./invariants.js";
+import { createInvariantBadge, createViewController } from "../../common/ui-kit.js";
 import { FIND_LEVELS, POSE_LABEL, createDex, createFinder } from "./dex.js";
 import { loadState, saveState } from "../../common/storage.js";
 import { createProgress } from "../../common/progress.js";
@@ -59,7 +60,7 @@ function addAnimal(speciesId = currentSpecies) {
   nextId += 1;
   const cameraAzimuth = Math.atan2(stage.camera.position.z, stage.camera.position.x);
   animal.angle = cameraAzimuth - Math.PI / 2 + index * 2.399963;
-  animal.orbitRadius = 1.95 + Math.sqrt(index) * 1.05;
+  animal.orbitRadius = 1.95 + index * 1.05;
   animal.orbitSpeed = 0.26 + (index % 4) * 0.06;
   animal.walking = walking;
   animal.proxy.userData.animalId = animal.id;
@@ -276,39 +277,18 @@ const VIEWS = {
   side: { position: [9.5, 2.4, 0], target: [0, 0.9, 0] },
   top: { position: [0, 12, 0.02], target: [0, 0.4, 0] },
 };
+const views = createViewController(stage, VIEWS);
 
-function setView(name) {
-  const view = VIEWS[name] ?? VIEWS.default;
-  stage.camera.position.set(...view.position);
-  stage.controls.target.set(...view.target);
-  stage.controls.update();
-}
-
-let invariantBadge = null;
+const badge = createInvariantBadge();
 let invariantProblems = [];
 let invariantTimer = 0;
-
-function renderInvariantBadge(problems) {
-  if (!invariantBadge) {
-    invariantBadge = document.createElement("div");
-    invariantBadge.style.cssText =
-      "position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:6;padding:7px 14px;border-radius:11px;font:600 12.5px/1.45 system-ui,sans-serif;background:#3a1414;color:#ffb0a5;border:1px solid rgba(255,107,92,.65);display:none;pointer-events:none;max-width:72vw";
-    document.body.append(invariantBadge);
-  }
-  if (problems.length === 0) {
-    invariantBadge.style.display = "none";
-    return;
-  }
-  invariantBadge.style.display = "block";
-  invariantBadge.textContent = `불변식 위반 ${problems.length}건 · ${problems[0].message}`;
-}
 
 function updateInvariants(delta) {
   invariantTimer += delta;
   if (invariantTimer < 0.5) return;
   invariantTimer = 0;
   invariantProblems = checkInvariants({ animals });
-  renderInvariantBadge(invariantProblems);
+  badge.show(invariantProblems);
   if (invariantProblems.length > 0) {
     console.error(`[불변식 위반] ${invariantProblems.map((problem) => problem.message).join(" | ")}`);
   }
@@ -368,5 +348,5 @@ window.__gameApi = {
         visible: Math.abs(projected.x) <= 1 && Math.abs(projected.y) <= 1 && projected.z <= 1,
       };
     }),
-  setView,
+  setView: views.setView,
 };
