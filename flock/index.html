@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3D 무리 유도 — three.js</title>
+    <link rel="stylesheet" href="../common/styles.css" />
+    <style>
+      :root {
+        --accent: #ffb800;
+        --ink: #e9e9e2;
+        --ink-soft: #9aa39c;
+        --line: rgba(255, 255, 255, 0.13);
+        --panel: rgba(16, 20, 28, 0.88);
+        --panel-solid: #10141c;
+        --font-mono: "IBM Plex Mono", "Nanum Gothic Coding", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #10141c;
+        color: var(--ink);
+        font-family: var(--font-mono);
+        -webkit-font-smoothing: antialiased;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #scene {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+
+      .panel {
+        position: fixed;
+        z-index: 2;
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+
+      .panel-head {
+        top: 18px;
+        left: 18px;
+        padding: 14px 18px;
+        max-width: 360px;
+      }
+
+      .panel-head .kicker {
+        margin: 0 0 4px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+      }
+
+      .panel-head h1 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .panel-head p {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+      }
+
+      .panel-stats {
+        top: 18px;
+        right: 18px;
+        padding: 12px 16px;
+        min-width: 208px;
+      }
+
+      .panel-stats dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 14px;
+        font-size: 12.5px;
+      }
+
+      .panel-stats dt {
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      .panel-stats dd {
+        margin: 0;
+        text-align: right;
+        font-weight: 600;
+      }
+
+      .panel-scatter {
+        left: 18px;
+        bottom: 62px;
+        padding: 10px 14px;
+        width: 280px;
+      }
+
+      .panel-scatter .label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11.5px;
+        color: var(--ink-soft);
+        margin-bottom: 6px;
+      }
+
+      .track {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+
+      .track > div {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: #54e0a0;
+        transition: width 0.16s linear, background 0.2s ease;
+      }
+
+      .track > div.is-warn {
+        background: #ffc451;
+      }
+
+      .track > div.is-bad {
+        background: #ff6b5c;
+      }
+
+      .status {
+        left: 18px;
+        bottom: 18px;
+        padding: 10px 14px;
+        font-size: 12.5px;
+        border-left: 2px solid var(--accent);
+        max-width: 420px;
+      }
+
+      .status.is-bad {
+        border-left-color: #ff6b5c;
+        color: #ffb0a5;
+      }
+
+      .panel-bar {
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-bar button {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 9px 14px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .panel-bar button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .panel-bar .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #10141c;
+        font-weight: 700;
+      }
+
+      .panel-bar .btn-primary:hover {
+        color: #10141c;
+      }
+
+      .btn-pulse {
+        animation: btn-pulse 1.9s ease-in-out infinite;
+      }
+
+      @keyframes btn-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 184, 0, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 9px rgba(255, 184, 0, 0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .btn-pulse {
+          animation: none;
+        }
+      }
+
+      .hint-keys {
+        right: 18px;
+        bottom: 18px;
+        padding: 9px 13px;
+        font-size: 11.5px;
+        line-height: 1.8;
+        color: var(--ink-soft);
+      }
+
+      .hint-keys b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        font: 500 11px/1 var(--font-mono);
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        color: var(--ink-soft);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 13px;
+      }
+
+      .back-link:hover {
+        color: var(--accent);
+        border-color: rgba(255, 184, 0, 0.5);
+      }
+
+      @media (max-width: 760px) {
+        .panel-head {
+          top: 10px;
+          left: 10px;
+          right: 86px;
+          width: auto;
+          max-width: none;
+          padding: 9px 12px;
+        }
+
+        .panel-head h1 {
+          font-size: 16px;
+          margin-bottom: 0;
+        }
+
+        .panel-head p {
+          display: none;
+        }
+
+        .panel-stats {
+          top: 58px;
+          left: 10px;
+          right: 10px;
+          min-width: 0;
+          padding: 8px 12px;
+        }
+
+        .panel-stats dl {
+          grid-template-columns: repeat(4, auto 1fr);
+          gap: 4px 8px;
+          font-size: 11.5px;
+        }
+
+        .panel-scatter {
+          left: 10px;
+          right: 10px;
+          bottom: 108px;
+          width: auto;
+          padding: 8px 12px;
+        }
+
+        .status {
+          left: 10px;
+          right: 10px;
+          bottom: 62px;
+          font-size: 11.5px;
+          padding: 8px 12px;
+          max-width: none;
+        }
+
+        .panel-bar {
+          left: 10px;
+          right: 10px;
+          bottom: 10px;
+          transform: none;
+          max-width: none;
+          justify-content: space-between;
+          padding: 9px 10px;
+        }
+
+        .panel-bar button {
+          font-size: 12px;
+          padding: 9px 10px;
+        }
+
+        .hint-keys {
+          display: none;
+        }
+
+        .back-link {
+          top: 10px;
+          right: 10px;
+          left: auto;
+          transform: none;
+          padding: 7px 10px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas
+      id="scene"
+      role="img"
+      aria-label="3D 무리 유도 3D 화면. 새 떼가 날아다니는 3D 경기장에서 빛을 움직여 링 게이트를 통과시키는 게임입니다."
+    ></canvas>
+    <a class="back-link" href="../index.html">&#8592; GAMES</a>
+
+    <section class="panel panel-head">
+      <p class="kicker">무리 유도</p>
+      <h1 id="level-name">첫 무리</h1>
+      <p id="level-hint">WASD로 불빛을 움직여 새 떼를 링을 통과시키세요.</p>
+    </section>
+
+    <section class="panel panel-stats">
+      <dl>
+        <dt>통과한 링</dt>
+        <dd id="stat-gates">0 / 3</dd>
+        <dt>남은 시간</dt>
+        <dd id="stat-time">60초</dd>
+        <dt>흩어짐</dt>
+        <dd id="stat-spread">0.0 m</dd>
+        <dt>새</dt>
+        <dd id="stat-birds">120마리</dd>
+      </dl>
+    </section>
+
+    <section class="panel panel-scatter">
+      <div class="label"><span>흩어짐</span><span>허용 <b id="scatter-limit">—</b> m</span></div>
+      <div class="track"><div id="scatter-bar"></div></div>
+    </section>
+
+    <p class="panel status" id="status-line">WASD로 불빛을 움직여 새 떼를 첫 링으로 몰아주세요.</p>
+
+    <nav class="panel panel-bar">
+      <button id="btn-retry" class="btn-primary btn-pulse" type="button">다시 시도 (R)</button>
+      <button id="btn-levels" type="button">레벨 선택</button>
+    </nav>
+
+    <p class="panel hint-keys">
+      <b>WASD · 방향키</b> 불빛 이동<br />
+      <b>드래그</b> 시점 · <b>휠</b> 확대<br />
+      <b>R</b> 다시 시도
+    </p>
+
+    <script>
+      (async () => {
+        const localMap = {
+          imports: {
+            three: "../vendor/three.module.js",
+            "three/addons/": "../vendor/addons/",
+          },
+        };
+        const remoteMap = {
+          imports: {
+            three: "https://unpkg.com/three@0.186.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/",
+          },
+        };
+        let map = localMap;
+        try {
+          await import("../vendor/three.module.js");
+        } catch {
+          map = remoteMap;
+        }
+        const tag = document.createElement("script");
+        tag.type = "importmap";
+        tag.textContent = JSON.stringify(map);
+        document.head.append(tag);
+        await import("./src/main.js");
+      })();
+    </script>
+  </body>
+</html>

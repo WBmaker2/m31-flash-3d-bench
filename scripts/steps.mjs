@@ -94,6 +94,23 @@ export const STEPS = {
     await placeShapesBlocks(page, 2);
     await shot("02-배치중");
   },
+  flock: async (page, shot) => {
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(4000);
+    await shot("02-유도");
+    await page
+      .waitForFunction(() => window.__gameApi?.getState?.().finished === true, null, { timeout: 150000 })
+      .catch(() => console.log("WARN: 무리 유도가 제한 시간 안에 끝나지 않음"));
+    await page.waitForTimeout(600);
+    await shot("03-결과");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: "레벨 선택" }).click();
+    await page.waitForTimeout(500);
+    await shot("04-레벨선택");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+  },
   maze: async (page, shot) => {
     await page.evaluate(() => window.__gameApi?.solve?.());
     await page.waitForTimeout(1200);
@@ -167,6 +184,10 @@ export const CARD_SETUP = {  zoo: async (page) => {
     await page.waitForTimeout(400);
     await page.getByRole("button", { name: "다음 웨이브" }).click();
     await page.waitForTimeout(2600);
+  },
+  flock: async (page) => {
+    await page.evaluate(() => window.__gameApi?.loadLevel?.(5));
+    await page.waitForTimeout(2500);
   },
   maze: async (page) => {
     await page.evaluate(() => window.__gameApi?.loadLevel?.(4));

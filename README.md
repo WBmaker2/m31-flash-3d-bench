@@ -14,6 +14,7 @@ MiniMax M3.1 Flash(`minimax-m3.1-flash-free`)가 three.js 3D 구현을 어디까
 | [`ballistics/`](ballistics/) | 3D 탄도 타워 | 수치 적분 + 연속 충돌 + 조준 | 레벨 8종 · 예측 궤적 == 실제 궤적 |
 | [`robot/`](robot/) | 3D 로봇 팔 조립실 | 역기구학 + 관절 체인 + 링크 충돌 | 레벨 8종 · IK 왕복 오차 1e-9 |
 | [`maze/`](maze/) | 3D 미로 탈출 | 1인칭 카메라 + 절차 생성 + 최단 경로 | 레벨 8종 · par = BFS 최적 경로 |
+| [`flock/`](flock/) | 3D 무리 유도 | 다체 에머전트 행동 + 이웃 탐색 | 레벨 8종 · 규칙별 수치 검증 |
 
 공통 부분(저장·진행·결과 화면)은 [`common/`](common/) 에 있고, 게임 규칙은 각 폴더에
 남습니다.
@@ -36,14 +37,14 @@ python3 -m http.server 5174
 ```
 
 ES 모듈이라 `file://`로 직접 열면 안 됩니다. 임의의 정적 서버면 됩니다.
-`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
+`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` `flock/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
 
 ## 검사 다시 돌리기
 
 ```bash
 npm install
-npm test          # 단위 테스트 254개
-npm run qa        # 게임 7종 + 랜딩 자동 검사
+npm test          # 단위 테스트 298개
+npm run qa        # 게임 8종 + 랜딩 자동 검사
 npm run qa:cards  # 카드 이미지 + checks.json 재생성
 ```
 
@@ -67,13 +68,14 @@ npm run qa                                     # 랜딩 검사 (링크·모달·
 
 ```bash
 npm install
-npm run qa             # 게임 7종 + 랜딩 전체 검사
+npm run qa             # 게임 8종 + 랜딩 전체 검사
 node scripts/shot.mjs zoo
 node scripts/shot.mjs molecule
 node scripts/shot.mjs defense
 node scripts/shot.mjs ballistics
 node scripts/shot.mjs robot
 node scripts/shot.mjs maze
+node scripts/shot.mjs flock
 node scripts/shot.mjs landing
 ```
 
@@ -100,7 +102,7 @@ node scripts/shot.mjs landing
 | 3층 화면 판정 | `scripts/shot.mjs` | 안 보이는 것, 빈 장면 | `node scripts/shot.mjs <게임>` |
 
 1층 테스트는 게임 폴더 안에 있습니다(`*/src/*.test.js`). 부모 저장소의 vitest가 자동으로 수집하므로 `npm test` 한 번이면 전부 돕니다. `three`는 브라우저(CDN)와 Node(테스트) 양쪽에서 **같은 버전 0.186.1**을 씁니다.
-단위 테스트는 **254개**입니다(게임 237 + 공통 17).
+단위 테스트는 **298개**입니다(게임 281 + 공통 17).
 
 ## 코딩 규칙 (3D에서 반복해서 겪은 실패에서 온 것)
 
@@ -189,6 +191,7 @@ node scripts/shot.mjs landing
 
 ## 내역
 
+- 2026-10-20: 3D 무리 유도(8번째 게임) 추가. boids 규칙(분리·정렬·응집)으로 120~400마리의 새 떼를 만들고, 불빛을 몰아 링 게이트를 통과시키는 유도 게임. 각 규칙의 성질을 수치로 검증하고(분리 시 거리 증가, dt 독립성 등) 흩어짐 판정 기준은 실측 평형값에 맞췄다. 단위 테스트 44개.
 - 2026-10-20: 3D 미로 탈출(7번째 게임) 추가. 1인칭 카메라(포인터락 직접 구현) + 시드 고정 DFS 완전 미로 + (위치×열쇠) 상태공간 BFS 최단 경로. par 을 BFS 최적 경로로 계산해 손맛을 없앴고, 방문한 길만 그리는 미니맵을 넣었다. 단위 테스트 34개.
 - 2026-10-20: 3D 로봇 팔 조립실(6번째 게임) 추가. 2절 역기구학으로 관절 각을 계산해 목표에 정확히 닿는 조립 게임. 팔꿈치를 접는 두 해 중 기둥에 막히지 않는 쪽을 팔이 고른다. 단위 테스트 39개.
 - 2026-10-20: 나머지 4개 게임에도 단계 진행 버튼 추가. zoo(찾기 게임)·molecule(분자 레벨)·shapes(도형 레벨)는 "다음 단계", defense는 "다음 난이도"로 결과 팝업에서 다음 단계로 이어지게 한다. 공용 결과 패널의 `pulse` 옵션을 각 게임에 적용.
