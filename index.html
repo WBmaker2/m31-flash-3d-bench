@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>M3.1 FLASH / 3D BENCH — MiniMax M3.1 Flash가 만든 3D 게임 6종</title>
+    <title>M3.1 FLASH / 3D BENCH — MiniMax M3.1 Flash가 만든 3D 게임 7종</title>
     <meta
       name="description"
-      content="MiniMax M3.1 Flash가 직접 구현한 three.js 3D 게임 6종. 폴리곤 동물원, 3D 분자 빌더, 3D 타워 디펜스, 3D 도형 조립실, 3D 탄도 타워, 3D 로봇 팔 조립실을 바로 플레이할 수 있습니다."
+      content="MiniMax M3.1 Flash가 직접 구현한 three.js 3D 게임 7종. 폴리곤 동물원, 3D 분자 빌더, 3D 타워 디펜스, 3D 도형 조립실, 3D 탄도 타워, 3D 로봇 팔 조립실, 3D 미로 탈출을 바로 플레이할 수 있습니다."
     />
     <link rel="stylesheet" href="vendor/fonts/fonts.css" />
     <style>
@@ -630,9 +630,9 @@
       <section class="wrap hero">
         <div class="hero-main">
           <p class="eyebrow"><b>MINIMAX M3.1 FLASH</b> · THREE.JS 0.186.1 · 빌드 단계 없음</p>
-          <h1>3D 게임 6종을<br />모델이 직접 만들었습니다</h1>
+          <h1>3D 게임 7종을<br />모델이 직접 만들었습니다</h1>
           <p class="lede">
-            MiniMax M3.1 Flash가 여섯 개의 three.js 게임을 처음부터 끝까지 구현했습니다.
+            MiniMax M3.1 Flash가 일곱 개의 three.js 게임을 처음부터 끝까지 구현했습니다.
             숫자는 <b>단위 테스트</b>가, 화면은 <b>4시점 자동 판정</b>이 확인합니다.
             아래 카드에 적힌 수치는 모두 실제 실행 결과입니다.
           </p>
@@ -642,15 +642,15 @@
         <dl class="hero-stats">
           <div>
             <dt>게임</dt>
-            <dd data-check="totals.games" data-value="6">6</dd>
+            <dd data-check="totals.games" data-value="7">7</dd>
           </div>
           <div>
             <dt>단위 테스트</dt>
-            <dd data-check="totals.tests" data-value="220">220개</dd>
+            <dd data-check="totals.tests" data-value="254">254개</dd>
           </div>
           <div>
             <dt>자동 검사 화면</dt>
-            <dd data-check="totals.views" data-value="18">18</dd>
+            <dd data-check="totals.views" data-value="21">21</dd>
           </div>
           <div>
             <dt>콘솔 오류</dt>
@@ -904,6 +904,45 @@
               <button class="play" type="button" data-href="robot/index.html" data-title="3D 로봇 팔 조립실">PLAY</button>
             </div>
           </article>
+
+          <article class="card" data-frames data-game="maze">
+            <div class="card-media">
+              <img
+                class="card-frame is-active"
+                src="docs/cards/maze-card.png"
+                alt="3D 미로 탈출 — 손전 밝기로 어둠 속 미로를 걸어 열쇠를 모으는 화면"
+              />
+              <img class="card-frame" src="docs/cards/maze-side.png" alt="" />
+              <img class="card-frame" src="docs/cards/maze-top.png" alt="" />
+            </div>
+            <div class="card-body">
+              <p class="card-index"><b>07</b> 공간 탐색</p>
+              <h3>3D 미로 탈출</h3>
+              <p class="card-desc">
+                1인칭으로 걸어가며 열쇠를 모아 문을 열고 출구로 나가는 미로 게임입니다.
+                걸은 길은 BFS로 구한 최적 경로와 비교해 별점이 되고, 방문한 길만 미니맵에 그려집니다.
+              </p>
+              <dl class="card-checks">
+                <div>
+                  <dt>단위 테스트</dt>
+                  <dd data-check="games.maze.tests" data-value="34">34개</dd>
+                </div>
+                <div>
+                  <dt>콘솔 오류</dt>
+                  <dd data-check="games.maze.consoleErrors" data-value="0">0건</dd>
+                </div>
+                <div>
+                  <dt>불변식 위반</dt>
+                  <dd data-check="games.maze.invariantViolations" data-value="0">0건</dd>
+                </div>
+                <div>
+                  <dt>시점 간 화면 차이</dt>
+                  <dd data-check="games.maze.viewDiffPercent" data-value="11">11%</dd>
+                </div>
+              </dl>
+              <button class="play" type="button" data-href="maze/index.html" data-title="3D 미로 탈출">PLAY</button>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -920,7 +959,7 @@
             <h3>순수 계산 검사</h3>
             <p>
               브라우저 없이 숫자로 확인합니다. 분자 결합각이 104.5° ± 0.5°인지, 동물이
-              겹치지 않는지, 적이 길을 따라 잘 움직이는지, 포신 궤적이 계산과 맞는지, 로봇 팔이 목표에 정확히 닿는지를 220개 테스트가 검사합니다.
+              겹치지 않는지, 적이 길을 따라 잘 움직이는지, 포신 궤적이 계산과 맞는지, 로봇 팔이 목표에 정확히 닿는지, 미로의 최적 경로가 실제로 최단인지를 254개 테스트가 검사합니다.
             </p>
           </div>
           <div class="layer">
@@ -968,7 +1007,7 @@
     <footer>
       <div class="wrap foot-inner">
         <span>MiniMax M3.1 Flash (free) · three.js 0.186.1 · 정적 파일만으로 구성</span>
-        <span>단위 테스트 220개 · 자동 검사 화면 18장</span>
+        <span>단위 테스트 254개 · 자동 검사 화면 21장</span>
       </div>
     </footer>
 
