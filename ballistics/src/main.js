@@ -215,9 +215,30 @@ function finishLevel(outcome) {
   const shotsLeft = Math.max(0, state.level.shots - state.shotsUsed);
   const score = liveScore() + (outcome === "won" ? shotsLeft * 50 : 0);
   const stars = outcome === "won" ? starsForShots(state.shotsUsed, state.level.par) : 0;
+  const hasNext = state.levelIndex + 1 < LEVELS.length;
+  const isLast = !hasNext;
+
+  // 단계를 통과하면 다음 단계로 바로 넘어갈 수 있게 첫 버튼으로 둔다.
+  const actions =
+    outcome === "won" && hasNext
+      ? [
+          { id: "next", label: "다음 단계", primary: true, pulse: true },
+          { id: "retry", label: "다시 하기" },
+          { id: "levels", label: "레벨 선택" },
+        ]
+      : outcome === "won"
+        ? [
+            { id: "first", label: "처음부터", primary: true, pulse: true },
+            { id: "retry", label: "다시 하기" },
+            { id: "levels", label: "레벨 선택" },
+          ]
+        : [
+            { id: "retry", label: "다시 하기", primary: true },
+            { id: "levels", label: "레벨 선택" },
+          ];
 
   showResult({
-    kicker: outcome === "won" ? "클리어" : "실패",
+    kicker: outcome === "won" ? (isLast ? "최종 클리어" : "클리어") : "실패",
     title: state.level.label,
     stars,
     score,
@@ -228,19 +249,25 @@ function finishLevel(outcome) {
     ],
     detail:
       outcome === "won"
-        ? state.shotsUsed <= state.level.par
-          ? "표준 샷 수 이하로 클리어했습니다."
-          : "표준보다 샷을 많이 썼습니다. 조준을 다듬어 보세요."
+        ? isLast
+          ? "마지막 단계까지 클리어했습니다. 처음부터 다시 도전해도 좋습니다."
+          : state.shotsUsed <= state.level.par
+            ? "표준 샷 수 이하로 클리어했습니다."
+            : "표준보다 샷을 많이 썼습니다. 조준을 다듬어 보세요."
         : "샷이 모두 떨어졌습니다. 각도를 다시 잡아 보세요.",
-    actions: [
-      { id: "retry", label: "다시 하기", primary: true },
-      { id: "levels", label: "레벨 선택" },
-    ],
+    actions,
   }).then((action) => {
-    if (action === "retry") loadLevel(state.levelIndex);
+    if (action === "next") gotoLevel(state.levelIndex + 1);
+    if (action === "first") gotoLevel(0);
+    if (action === "retry") gotoLevel(state.levelIndex);
     if (action === "levels") openLevels();
   });
   updateStatus();
+}
+
+function gotoLevel(index) {
+  loadLevel(index);
+  showToast(`레벨 ${String(state.levelIndex + 1).padStart(2, "0")} · ${state.level.label}`);
 }
 
 function openLevels() {

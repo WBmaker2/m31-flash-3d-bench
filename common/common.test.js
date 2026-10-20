@@ -160,8 +160,22 @@ describe("공통 화면", () => {
     expect(panel.querySelectorAll("button")).toHaveLength(2);
   });
 
-  it("레벨 화면에 잠금과 별점이 표시된다", () => {
-    const panel = buildLevelPanel({
+  it("다음 단계 버튼에만 펄스 표시가 붙는다", () => {
+    const panel = buildResultPanel({
+      title: "클리어",
+      actions: [
+        { id: "next", label: "다음 단계", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+      ],
+    });
+    const buttons = panel.querySelectorAll("button");
+    expect(buttons[0].dataset.action).toBe("next");
+    expect(buttons[0].classList.contains("btn-pulse")).toBe(true);
+    expect(buttons[0].classList.contains("m31-btn-primary")).toBe(true);
+    expect(buttons[1].classList.contains("btn-pulse")).toBe(false);
+  });
+
+  it("레벨 화면에 잠금과 별점이 표시된다", () => {    const panel = buildLevelPanel({
       title: "레벨 선택",
       levels: [
         { id: "one", label: "하나", stars: 3, unlocked: true },

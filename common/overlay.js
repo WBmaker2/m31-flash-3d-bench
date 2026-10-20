@@ -46,6 +46,8 @@ export function buildResultPanel(options = {}) {
     const button = element("button", action.primary ? "m31-btn m31-btn-primary" : "m31-btn", action.label);
     button.type = "button";
     button.dataset.action = action.id;
+    // 다음 단계로 넘어가는 버튼은 반드시 눌러야 하는 지점이다. 펄스로 안내한다.
+    if (action.pulse) button.classList.add("btn-pulse");
     actions.append(button);
   }
   panel.append(actions);
