@@ -10,7 +10,7 @@ import pixelmatch from "pixelmatch";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const BASELINE_DIR = path.join(ROOT, "docs", "baseline");
-const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock"];
+const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock", "sculpt"];
 const VIEWPORT = { width: 1280, height: 800 };
 const MAX_DIFF_RATIO = Number(process.env.VISUAL_MAX_DIFF ?? 0.05);
 const MAX_POSITION_DRIFT = Number(process.env.VISUAL_MAX_DRIFT ?? 0.01);

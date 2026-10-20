@@ -159,6 +159,21 @@ export const STEPS = {
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
   },
+  sculpt: async (page, shot) => {
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(1200);
+    await shot("02-조각");
+    await page.getByRole("button", { name: "채점 (Space)" }).click();
+    await page.waitForTimeout(700);
+    await shot("03-결과");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: "레벨 선택" }).click();
+    await page.waitForTimeout(500);
+    await shot("04-레벨선택");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+  },
 };
 
 export const CARD_SETUP = {  zoo: async (page) => {
@@ -215,5 +230,11 @@ export const CARD_SETUP = {  zoo: async (page) => {
     await page.waitForTimeout(600);
     await page.getByRole("button", { name: "발사 (Space)" }).click();
     await page.waitForTimeout(620);
+  },
+  sculpt: async (page) => {
+    await page.evaluate(() => window.__gameApi?.loadLevel?.(5));
+    await page.waitForTimeout(700);
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(900);
   },
 };
