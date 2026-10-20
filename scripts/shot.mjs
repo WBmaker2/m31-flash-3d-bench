@@ -217,6 +217,52 @@ if (positions.length > 0) {
   }
 }
 
+await page.setViewportSize({ width: 390, height: 844 });
+await page.waitForTimeout(500);
+
+const mobileLayout = await page.evaluate(() => {
+  const selectors = ".hud, .panel, .find-panel, .session-panel, .held, .back-link";
+  const nodes = [...document.querySelectorAll(selectors)].filter((node) => {
+    const rect = node.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && node.offsetParent !== null;
+  });
+  const boxes = nodes.map((node) => {
+    const rect = node.getBoundingClientRect();
+    return {
+      name: node.className.replace(/\b(hud|panel)\b/g, "").trim() || node.className,
+      x: Math.round(rect.x),
+      y: Math.round(rect.y),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+    };
+  });
+  const overlaps = [];
+  for (let i = 0; i < boxes.length; i += 1) {
+    for (let j = i + 1; j < boxes.length; j += 1) {
+      const a = boxes[i];
+      const b = boxes[j];
+      if (a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height) {
+        overlaps.push(`${a.name} × ${b.name}`);
+      }
+    }
+  }
+  const offscreen = boxes
+    .filter((box) => box.x < -1 || box.y < -1 || box.x + box.width > 391 || box.y + box.height > 845)
+    .map((box) => box.name);
+  return { overlaps, offscreen };
+});
+
+if (mobileLayout.overlaps.length > 0) {
+  failures.push(`모바일(390x844) HUD 겹침: ${mobileLayout.overlaps.join(", ")}`);
+}
+if (mobileLayout.offscreen.length > 0) {
+  failures.push(`모바일(390x844) 화면 밖 패널: ${mobileLayout.offscreen.join(", ")}`);
+}
+
+await shot("05-모바일");
+await page.setViewportSize({ width: 1280, height: 800 });
+await page.waitForTimeout(400);
+
 const base = viewFiles.default;
 if (base) {
   for (const [view, file] of Object.entries(viewFiles)) {

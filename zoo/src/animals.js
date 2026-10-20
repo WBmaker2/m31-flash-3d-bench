@@ -311,6 +311,10 @@ export function buildAnimal(speciesId) {
   };
 }
 
+const reduceMotion =
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+
 export function updateAnimal(animal, delta, elapsed, camera) {
   const { spec, legs, tail, head, body, group, inner } = animal;
 
@@ -331,7 +335,7 @@ export function updateAnimal(animal, delta, elapsed, camera) {
     leg.hip.rotation.x = swing;
   }
 
-  const breath = 1 + Math.sin(elapsed * 1.9 + animal.seed) * 0.028;
+  const breath = reduceMotion ? 1 : 1 + Math.sin(elapsed * 1.9 + animal.seed) * 0.028;
   body.scale.set(spec.body.rx, spec.body.ry * breath, spec.body.rz);
 
   head.position.y = animal.headBaseY + Math.sin(elapsed * 1.9 + animal.seed) * 0.022;

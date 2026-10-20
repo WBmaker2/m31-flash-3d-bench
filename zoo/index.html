@@ -249,6 +249,7 @@
         opacity: 0.75;
       }
 
+
       .hint {
         position: fixed;
         right: 20px;
@@ -282,11 +283,74 @@
         color: var(--ink);
         border-color: rgba(58, 47, 36, 0.32);
       }
+
+      @media (max-width: 760px) {
+        .hud-title {
+          top: 10px;
+          left: 10px;
+          right: 86px;
+          max-width: none;
+          padding: 9px 12px;
+        }
+        .hud-title h1 {
+          font-size: 16px;
+          margin-bottom: 0;
+        }
+        .hud-title p {
+          display: none;
+        }
+        .hud-status {
+          top: 62px;
+          left: 10px;
+          right: 10px;
+          min-width: 0;
+          padding: 8px 12px;
+        }
+        .hud-status dl {
+          grid-template-columns: repeat(3, auto 1fr);
+          gap: 4px 8px;
+          font-size: 11.5px;
+        }
+        .hud-bar {
+          left: 10px;
+          right: 10px;
+          bottom: 10px;
+          transform: none;
+          max-width: none;
+          flex-wrap: nowrap;
+          justify-content: flex-start;
+          overflow-x: auto;
+          padding: 9px 10px;
+        }
+        .hud-bar .group {
+          flex: 0 0 auto;
+        }
+        .hud-bar button {
+          font-size: 12px;
+          padding: 8px 11px;
+        }
+        .hint {
+          display: none;
+        }
+        .find-panel {
+          top: 116px;
+          left: 10px;
+          right: 10px;
+          transform: none;
+        }
+        .back-link {
+          top: 10px;
+          right: 10px;
+          left: auto;
+          transform: none;
+          padding: 7px 10px;
+        }
+      }
     </style>
   </head>
   <body>
     <a class="back-link" href="../index.html">&#8592; GAMES</a>
-    <canvas id="scene"></canvas>
+    <canvas id="scene" role="img" aria-label="폴리곤 동물원 3D 화면. 고양이·강아지·판다·토끼가 정원을 걷습니다. 동물을 눌러 점프시킬 수 있고, 아래 버튼으로 종을 바꾸거나 도감을 열 수 있습니다."></canvas>
 
     <section class="hud hud-title">
       <h1>폴리곤 동물원</h1>

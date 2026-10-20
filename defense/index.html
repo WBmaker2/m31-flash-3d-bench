@@ -220,6 +220,7 @@
         }
       }
 
+
       .panel-info {
         left: 50%;
         transform: translateX(-50%);
@@ -299,11 +300,87 @@
         color: var(--accent);
         border-color: rgba(94, 200, 190, 0.5);
       }
+
+      @media (max-width: 760px) {
+        .panel-title {
+          top: 10px;
+          left: 10px;
+          right: 86px;
+          max-width: none;
+          padding: 9px 12px;
+        }
+        .panel-title h1 {
+          font-size: 16px;
+          margin-bottom: 0;
+        }
+        .panel-title p {
+          display: none;
+        }
+        .panel-stats {
+          top: 62px;
+          left: 10px;
+          right: 10px;
+          min-width: 0;
+          padding: 8px 12px;
+        }
+        .panel-stats dl {
+          grid-template-columns: repeat(3, auto 1fr);
+          gap: 4px 8px;
+          font-size: 11.5px;
+        }
+        .panel-towers {
+          left: 10px;
+          right: 10px;
+          bottom: 78px;
+          padding: 9px 12px;
+        }
+        .tower-row {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+        }
+        .tower-button {
+          min-width: 78px;
+          padding: 7px 9px;
+        }
+        .panel-bar {
+          left: 10px;
+          right: 10px;
+          bottom: 10px;
+          max-width: none;
+          justify-content: flex-start;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding: 9px 10px;
+        }
+        .panel-bar button {
+          font-size: 12px;
+          padding: 8px 11px;
+          white-space: nowrap;
+        }
+        .hint {
+          display: none;
+        }
+        .panel-info {
+          left: 10px;
+          right: 10px;
+          bottom: 186px;
+          transform: none;
+          max-width: none;
+          font-size: 12px;
+        }
+        .back-link {
+          top: 10px;
+          right: 10px;
+          left: auto;
+          transform: none;
+          padding: 7px 10px;
+        }
+      }
     </style>
   </head>
   <body>
     <a class="back-link" href="../index.html">&#8592; GAMES</a>
-    <canvas id="scene"></canvas>
+    <canvas id="scene" role="img" aria-label="3D 타워 디펜스 3D 화면. 격자 보드 위 길에 타워를 세워 적을 막습니다. 아래 버튼으로 타워 종류를 고르고 다음 웨이브를 시작할 수 있습니다."></canvas>
 
     <section class="panel panel-title">
       <h1>3D 타워 디펜스</h1>

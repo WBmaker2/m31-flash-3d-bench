@@ -213,6 +213,7 @@
         font-variant-numeric: tabular-nums;
       }
 
+
       .panel-status {
         right: 20px;
         bottom: 22px;
@@ -314,11 +315,100 @@
         color: var(--accent);
         border-color: rgba(87, 196, 190, 0.5);
       }
+
+      @media (max-width: 760px) {
+        .panel-title {
+          top: 10px;
+          left: 10px;
+          right: 86px;
+          max-width: none;
+          padding: 9px 12px;
+        }
+        .panel-title h1 {
+          font-size: 16px;
+          margin-bottom: 0;
+        }
+        .panel-title p {
+          display: none;
+        }
+        .panel-target {
+          top: 62px;
+          left: 10px;
+          right: 10px;
+          width: auto;
+          padding: 9px 12px;
+        }
+        .panel-target h2 {
+          margin-bottom: 6px;
+        }
+        .target-buttons {
+          grid-template-columns: repeat(4, 1fr);
+          gap: 5px;
+        }
+        .target-buttons button {
+          font-size: 11px;
+          padding: 7px 4px;
+        }
+        .panel-elements {
+          top: auto;
+          bottom: 152px;
+          left: 10px;
+          right: 10px;
+          width: auto;
+          padding: 9px 12px;
+        }
+        .element {
+          padding: 6px 3px 5px;
+        }
+        .element .dot {
+          width: 20px;
+          height: 20px;
+        }
+        .element .name {
+          display: none;
+        }
+        .panel-bar {
+          left: 10px;
+          right: 10px;
+          bottom: 10px;
+          transform: none;
+          max-width: none;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding: 9px 10px;
+        }
+        .panel-bar button {
+          font-size: 12px;
+          padding: 8px 11px;
+          white-space: nowrap;
+        }
+        .panel-status {
+          left: 10px;
+          right: 10px;
+          bottom: 196px;
+          max-width: none;
+          font-size: 12px;
+          padding: 8px 12px;
+        }
+        .session-panel {
+          top: 128px;
+          left: 10px;
+          right: 10px;
+          transform: none;
+        }
+        .back-link {
+          top: 10px;
+          right: 10px;
+          left: auto;
+          transform: none;
+          padding: 7px 10px;
+        }
+      }
     </style>
   </head>
   <body>
     <a class="back-link" href="../index.html">&#8592; GAMES</a>
-    <canvas id="scene"></canvas>
+    <canvas id="scene" role="img" aria-label="3D 분자 빌더 3D 화면. 원자를 놓고 결합해 목표 분자를 만듭니다. 아래 버튼으로 원자를 고르고 자동 배치·검사를 실행할 수 있습니다."></canvas>
     <div class="vignette"></div>
 
     <section class="panel panel-title">
