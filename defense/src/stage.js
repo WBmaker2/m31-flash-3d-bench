@@ -57,11 +57,17 @@ export function createStage(canvas) {
 
   const timer = new THREE.Timer();
   const STEP = 1 / 60;
+  const still = new URLSearchParams(window.location.search).has("still");
 
   function start(update) {
     let accumulator = 0;
     let elapsed = 0;
     renderer.setAnimationLoop(() => {
+      if (still) {
+        renderer.render(scene, camera);
+        if (window.__gameReady !== true) window.__gameReady = true;
+        return;
+      }
       timer.update();
       const delta = Math.min(timer.getDelta(), 0.1);
       accumulator = Math.min(accumulator + delta, 0.25);

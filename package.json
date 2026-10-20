@@ -15,7 +15,9 @@
     "qa:landing": "node scripts/shot.mjs landing",
     "test": "vitest run",
     "qa:sync": "node scripts/check-sync.mjs",
-    "fonts": "node scripts/sync-fonts.mjs"
+    "fonts": "node scripts/sync-fonts.mjs",
+    "qa:visual": "node scripts/visual-regress.mjs",
+    "qa:visual:update": "node scripts/visual-regress.mjs --update"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",

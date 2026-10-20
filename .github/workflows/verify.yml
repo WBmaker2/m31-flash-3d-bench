@@ -42,5 +42,8 @@ jobs:
           npm run vendor
           git diff --exit-code vendor
 
+      - name: 화면 회귀 검사 (기준 화면과 픽셀 비교)
+        run: npm run qa:visual
+
       - name: 카드 이미지 · 랜딩 수치 동기화 확인
         run: node scripts/check-sync.mjs
