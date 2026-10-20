@@ -94,6 +94,22 @@ export const STEPS = {
     await placeShapesBlocks(page, 2);
     await shot("02-배치중");
   },
+  ballistics: async (page, shot) => {
+    await page.getByRole("button", { name: "발사 (Space)" }).click();
+    await page.waitForTimeout(280);
+    await shot("02-비행");
+    await page.waitForTimeout(700);
+    await shot("03-명중");
+    await page.waitForTimeout(1400);
+    await shot("04-결과");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+    await page.getByRole("button", { name: "레벨 선택" }).click();
+    await page.waitForTimeout(500);
+    await shot("05-레벨선택");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+  },
 };
 
 export const CARD_SETUP = {  zoo: async (page) => {
@@ -119,5 +135,14 @@ export const CARD_SETUP = {  zoo: async (page) => {
     await page.waitForTimeout(400);
     await page.getByRole("button", { name: "다음 웨이브" }).click();
     await page.waitForTimeout(2600);
+  },
+  ballistics: async (page) => {
+    await page.evaluate(() => {
+      window.__gameApi?.loadLevel(4);
+      window.__gameApi?.setAim({ yawDeg: 0, pitchDeg: 45, power: 11.7 });
+    });
+    await page.waitForTimeout(600);
+    await page.getByRole("button", { name: "발사 (Space)" }).click();
+    await page.waitForTimeout(620);
   },
 };

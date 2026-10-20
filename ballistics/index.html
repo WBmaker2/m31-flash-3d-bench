@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3D 탄도 타워 — three.js</title>
+    <link rel="stylesheet" href="../common/styles.css" />
+    <style>
+      :root {
+        --accent: #ffb800;
+        --ink: #e9e9e2;
+        --ink-soft: #9aa39c;
+        --line: rgba(255, 255, 255, 0.13);
+        --panel: rgba(14, 18, 30, 0.88);
+        --panel-solid: #12162a;
+        --font-mono: "IBM Plex Mono", "Nanum Gothic Coding", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #12162a;
+        color: var(--ink);
+        font-family: var(--font-mono);
+        -webkit-font-smoothing: antialiased;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #scene {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+
+      .panel {
+        position: fixed;
+        z-index: 2;
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+
+      .panel-head {
+        top: 18px;
+        left: 18px;
+        padding: 14px 18px;
+        max-width: 340px;
+      }
+
+      .panel-head .kicker {
+        margin: 0 0 4px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+      }
+
+      .panel-head h1 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .panel-head p {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+      }
+
+      .panel-stats {
+        top: 18px;
+        right: 18px;
+        padding: 12px 16px;
+        min-width: 186px;
+      }
+
+      .panel-stats dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 14px;
+        font-size: 12.5px;
+      }
+
+      .panel-stats dt {
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      .panel-stats dd {
+        margin: 0;
+        text-align: right;
+        font-weight: 600;
+      }
+
+      .panel-bar {
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        max-width: min(920px, calc(100vw - 36px));
+      }
+
+      .dials {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .dial {
+        display: grid;
+        grid-template-columns: 34px 116px 58px;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+
+      .dial output {
+        color: var(--ink);
+        font-weight: 600;
+        text-align: right;
+      }
+
+      .dial input[type="range"] {
+        width: 116px;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .panel-bar button {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 9px 14px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+
+      .panel-bar button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .panel-bar button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .panel-bar .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #12162a;
+        font-weight: 700;
+      }
+
+      .panel-bar .btn-primary:hover {
+        color: #12162a;
+      }
+
+      .btn-pulse {
+        animation: btn-pulse 1.9s ease-in-out infinite;
+      }
+
+      @keyframes btn-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 184, 0, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 9px rgba(255, 184, 0, 0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .btn-pulse {
+          animation: none;
+        }
+      }
+
+      .hint-keys {
+        right: 18px;
+        bottom: 96px;
+        padding: 9px 13px;
+        font-size: 11.5px;
+        line-height: 1.7;
+        color: var(--ink-soft);
+      }
+
+      .hint-keys b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        font: 500 11px/1 var(--font-mono);
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        color: var(--ink-soft);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 13px;
+      }
+
+      .back-link:hover {
+        color: var(--accent);
+        border-color: rgba(255, 184, 0, 0.5);
+      }
+
+      @media (max-width: 760px) {
+        .panel-head {
+          top: 10px;
+          left: 10px;
+          right: 86px;
+          width: auto;
+          max-width: none;
+          padding: 9px 12px;
+        }
+
+        .panel-head h1 {
+          font-size: 16px;
+          margin-bottom: 0;
+        }
+
+        .panel-head p {
+          display: none;
+        }
+
+        .panel-stats {
+          top: 58px;
+          left: 10px;
+          right: 10px;
+          min-width: 0;
+          padding: 8px 12px;
+        }
+
+        .panel-stats dl {
+          grid-template-columns: repeat(4, auto 1fr);
+          gap: 4px 8px;
+          font-size: 11.5px;
+        }
+
+        .panel-bar {
+          left: 10px;
+          right: 10px;
+          bottom: 10px;
+          transform: none;
+          max-width: none;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+          padding: 10px 12px;
+        }
+
+        .dials {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 6px;
+        }
+
+        .dial {
+          grid-template-columns: 34px 1fr 56px;
+        }
+
+        .dial input[type="range"] {
+          width: 100%;
+        }
+
+        .actions {
+          justify-content: space-between;
+        }
+
+        .panel-bar button {
+          font-size: 12px;
+          padding: 9px 10px;
+        }
+
+        .hint-keys {
+          display: none;
+        }
+
+        .back-link {
+          top: 10px;
+          right: 10px;
+          left: auto;
+          transform: none;
+          padding: 7px 10px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas
+      id="scene"
+      role="img"
+      aria-label="3D 탄도 타워 3D 화면. 석양 사격장에서 포신을 조준해 표적 상자를 무너뜨리는 게임입니다. 아래 슬라이더로 방위각·고도각·파워를 정하고 발사합니다."
+    ></canvas>
+    <a class="back-link" href="../index.html">&#8592; GAMES</a>
+
+    <section class="panel panel-head">
+      <p class="kicker">탄도 타워</p>
+      <h1 id="level-name">첫 발사</h1>
+      <p id="level-hint">고도각 30°, 파워 11 로 앞 상자를 맞혀 보세요.</p>
+    </section>
+
+    <section class="panel panel-stats">
+      <dl>
+        <dt>남은 샷</dt>
+        <dd id="stat-shots">4 / 4</dd>
+        <dt>남은 표적</dt>
+        <dd id="stat-targets">1 / 1</dd>
+        <dt>점수</dt>
+        <dd id="stat-score">0</dd>
+        <dt>바람</dt>
+        <dd id="stat-wind">없음</dd>
+      </dl>
+    </section>
+
+    <nav class="panel panel-bar">
+      <div class="dials">
+        <label class="dial">
+          <span>방위</span>
+          <input id="aim-yaw" type="range" min="-45" max="45" step="1" value="0" />
+          <output id="aim-yaw-out">0°</output>
+        </label>
+        <label class="dial">
+          <span>고도</span>
+          <input id="aim-pitch" type="range" min="5" max="80" step="1" value="30" />
+          <output id="aim-pitch-out">30°</output>
+        </label>
+        <label class="dial">
+          <span>파워</span>
+          <input id="aim-power" type="range" min="6" max="30" step="0.1" value="11" />
+          <output id="aim-power-out">11.0 m/s</output>
+        </label>
+      </div>
+      <div class="actions">
+        <button id="btn-fire" class="btn-primary btn-pulse" type="button">발사 (Space)</button>
+        <button id="btn-reset" type="button">리셋 (R)</button>
+        <button id="btn-levels" type="button">레벨 선택</button>
+      </div>
+    </nav>
+
+    <p class="panel hint-keys">
+      <b>↑↓</b> 고도 · <b>←→</b> 방위 · <b>Space</b> 발사 · <b>R</b> 리셋 · <b>드래그</b> 시점
+    </p>
+
+    <script>
+      (async () => {
+        const localMap = {
+          imports: {
+            three: "../vendor/three.module.js",
+            "three/addons/": "../vendor/addons/",
+          },
+        };
+        const remoteMap = {
+          imports: {
+            three: "https://unpkg.com/three@0.186.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/",
+          },
+        };
+        let map = localMap;
+        try {
+          await import("../vendor/three.module.js");
+        } catch {
+          map = remoteMap;
+        }
+        const tag = document.createElement("script");
+        tag.type = "importmap";
+        tag.textContent = JSON.stringify(map);
+        document.head.append(tag);
+        await import("./src/main.js");
+      })();
+    </script>
+  </body>
+</html>
