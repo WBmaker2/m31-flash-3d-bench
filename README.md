@@ -12,6 +12,7 @@ MiniMax M3.1 Flash(`minimax-m3.1-flash-free`)가 three.js 3D 구현을 어디까
 | [`defense/`](defense/) | 3D 타워 디펜스 | 실시간 상태 머신 + 경로 + 전투 | 난이도 3단계 · 웨이브 10개 · 별점 |
 | [`shapes/`](shapes/) | 3D 도형 조립실 | 3D 회전 + 격자 배치 + 형상 판정 | 레벨 12단계 · 칸 단위 판정 |
 | [`ballistics/`](ballistics/) | 3D 탄도 타워 | 수치 적분 + 연속 충돌 + 조준 | 레벨 8종 · 예측 궤적 == 실제 궤적 |
+| [`robot/`](robot/) | 3D 로봇 팔 조립실 | 역기구학 + 관절 체인 + 링크 충돌 | 레벨 8종 · IK 왕복 오차 1e-9 |
 
 공통 부분(저장·진행·결과 화면)은 [`common/`](common/) 에 있고, 게임 규칙은 각 폴더에
 남습니다.
@@ -34,14 +35,14 @@ python3 -m http.server 5174
 ```
 
 ES 모듈이라 `file://`로 직접 열면 안 됩니다. 임의의 정적 서버면 됩니다.
-`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
+`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
 
 ## 검사 다시 돌리기
 
 ```bash
 npm install
-npm test          # 단위 테스트 181개
-npm run qa        # 게임 5종 + 랜딩 자동 검사
+npm test          # 단위 테스트 220개
+npm run qa        # 게임 6종 + 랜딩 자동 검사
 npm run qa:cards  # 카드 이미지 + checks.json 재생성
 ```
 
@@ -65,11 +66,12 @@ npm run qa                                     # 랜딩 검사 (링크·모달·
 
 ```bash
 npm install
-npm run qa             # 게임 5종 + 랜딩 전체 검사
+npm run qa             # 게임 6종 + 랜딩 전체 검사
 node scripts/shot.mjs zoo
 node scripts/shot.mjs molecule
 node scripts/shot.mjs defense
 node scripts/shot.mjs ballistics
+node scripts/shot.mjs robot
 node scripts/shot.mjs landing
 ```
 
@@ -96,7 +98,7 @@ node scripts/shot.mjs landing
 | 3층 화면 판정 | `scripts/shot.mjs` | 안 보이는 것, 빈 장면 | `node scripts/shot.mjs <게임>` |
 
 1층 테스트는 게임 폴더 안에 있습니다(`*/src/*.test.js`). 부모 저장소의 vitest가 자동으로 수집하므로 `npm test` 한 번이면 전부 돕니다. `three`는 브라우저(CDN)와 Node(테스트) 양쪽에서 **같은 버전 0.186.1**을 씁니다.
-단위 테스트는 **181개**입니다(게임 164 + 공통 17).
+단위 테스트는 **220개**입니다(게임 203 + 공통 17).
 
 ## 코딩 규칙 (3D에서 반복해서 겪은 실패에서 온 것)
 
@@ -185,6 +187,7 @@ node scripts/shot.mjs landing
 
 ## 내역
 
+- 2026-10-20: 3D 로봇 팔 조립실(6번째 게임) 추가. 2절 역기구학으로 관절 각을 계산해 목표에 정확히 닿는 조립 게임. 팔꿈치를 접는 두 해 중 기둥에 막히지 않는 쪽을 팔이 고른다. 단위 테스트 39개.
 - 2026-10-20: 나머지 4개 게임에도 단계 진행 버튼 추가. zoo(찾기 게임)·molecule(분자 레벨)·shapes(도형 레벨)는 "다음 단계", defense는 "다음 난이도"로 결과 팝업에서 다음 단계로 이어지게 한다. 공용 결과 패널의 `pulse` 옵션을 각 게임에 적용.
 - 2026-10-20: fix(defense) 보드 클릭 시 `pick` 객체를 함수처럼 호출하던 오류 수정(`pick.pick`). 적 겹침 불변식이 0.5 m 격자 비교라 지나치게 넓게 잡히던 것을 실제 거리(0.3 m) 기준으로 좁혔다.
 - 2026-10-20: 탄도 타워 결과 팝업에 "다음 단계" 버튼 추가. 단계를 통과하면 다음 레벨로 바로 넘어가며, 반드시 눌러야 하는 지점이라 펄스 표시로 안내한다. 공용 결과 패널이 `pulse` 옵션을 받도록 확장.

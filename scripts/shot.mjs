@@ -61,7 +61,7 @@ async function diffRatio(first, second) {
 const target = process.argv[2] ?? "zoo";
 const isLanding = target === "landing";
 if (!existsSync(path.join(ROOT, target)) && !isLanding) {
-  console.error(`알 수 없는 대상: ${target} (zoo|molecule|defense|shapes|ballistics|landing)`);
+  console.error(`알 수 없는 대상: ${target} (zoo|molecule|defense|shapes|ballistics|robot|landing)`);
   process.exit(2);
 }
 
