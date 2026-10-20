@@ -156,8 +156,8 @@ describe("블록 방향", () => {
 });
 
 describe("레벨 데이터", () => {
-  it("레벨이 8개다", () => {
-    expect(LEVELS).toHaveLength(8);
+  it("레벨이 12개다", () => {
+    expect(LEVELS).toHaveLength(12);
   });
 
   it("모든 목표가 3×3×3 안에 있다", () => {
@@ -178,6 +178,28 @@ describe("레벨 데이터", () => {
         total += BLOCKS[id].cells.length;
       }
       expect(total).toBeGreaterThanOrEqual(level.target.length);
+    }
+  });
+
+  it("제공 블록으로 목표를 실제로 덮을 수 있다", () => {
+    for (const level of LEVELS) {
+      const reachable = new Set();
+      const stack = [];
+      for (const id of level.blocks) {
+        for (const orientation of blockOrientations(id)) {
+          for (const [x, y, z] of level.target) {
+            for (const cell of orientation.cells) {
+              const placed = [cell[0] + x - orientation.anchor[0], cell[1] + y - orientation.anchor[1], cell[2] + z - orientation.anchor[2]];
+              if (placed.every((value) => value >= 0 && value < GRID_SIZE)) {
+                stack.push(placed);
+              }
+            }
+          }
+        }
+      }
+      for (const cell of stack) reachable.add(cell.join(","));
+      const covered = level.target.filter((cell) => reachable.has(cell.join(","))).length;
+      expect(covered).toBe(level.target.length);
     }
   });
 

@@ -190,8 +190,8 @@ describe("웨이브 구성", () => {
     }
   });
 
-  it("웨이브는 8개다", () => {
-    expect(WAVES).toHaveLength(8);
+  it("웨이브는 10개다", () => {
+    expect(WAVES).toHaveLength(10);
   });
 });
 
@@ -213,8 +213,8 @@ describe("난이도", () => {
     }
   });
 
-  it("웨이브가 8개다", () => {
-    expect(WAVES).toHaveLength(8);
+  it("웨이브가 10개다", () => {
+    expect(WAVES).toHaveLength(10);
   });
 });
 

@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-10-19T23:54:22.761Z",
+  "generatedAt": "2026-10-20T01:10:49.416Z",
   "games": {
     "zoo": {
       "tests": 25,
       "consoleErrors": 0,
       "invariantViolations": 0,
-      "viewDiffPercent": 44
+      "viewDiffPercent": 42
     },
     "molecule": {
-      "tests": 29,
+      "tests": 30,
       "consoleErrors": 0,
       "invariantViolations": 0,
       "viewDiffPercent": 21
@@ -20,7 +20,7 @@
       "viewDiffPercent": 20
     },
     "shapes": {
-      "tests": 25,
+      "tests": 26,
       "consoleErrors": 0,
       "invariantViolations": 0,
       "viewDiffPercent": 12
@@ -28,8 +28,8 @@
   },
   "totals": {
     "games": 4,
-    "tests": 120,
-    "gameTests": 104,
+    "tests": 122,
+    "gameTests": 106,
     "commonTests": 16,
     "views": 12,
     "consoleErrors": 0,

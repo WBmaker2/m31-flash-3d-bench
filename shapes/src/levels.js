@@ -90,6 +90,60 @@ export const LEVELS = [
     blocks: ["cube2x2x2", "bar3", "bar3"],
     par: 2,
   },
+  {
+    id: "cross",
+    label: "십자",
+    hint: "막대 하나와 정육면체 둘로 십자를 만드세요.",
+    target: [
+      [1, 0, 0],
+      [0, 0, 0],
+      [2, 0, 0],
+      [1, 0, 1],
+      [1, 0, 2],
+    ],
+    blocks: ["bar3", "cube", "cube"],
+    par: 3,
+  },
+  {
+    id: "stairs",
+    label: "계단",
+    hint: "계단 블록 하나와 정육면체 둘로 계단을 만드세요.",
+    target: [
+      [0, 0, 0],
+      [1, 0, 0],
+      [2, 0, 0],
+      [0, 0, 1],
+      [1, 0, 1],
+      [2, 0, 2],
+    ],
+    blocks: ["step4", "cube", "cube"],
+    par: 3,
+  },
+  {
+    id: "pillar",
+    label: "기둥",
+    hint: "큰 정육면체 위에 2×2 판을 얹으면 두 층짜리 기둥이 돼요.",
+    target: [
+      ...box(0, 1, 0, 1, 0, 1),
+      ...box(0, 1, 2, 2, 0, 1),
+    ],
+    blocks: ["cube2x2x2", "square2x2", "square2x2"],
+    par: 3,
+  },
+  {
+    id: "castle",
+    label: "성",
+    hint: "가운데 큰 상자, 위쪽 막대, 옆쪽 모서리 하나씩.",
+    target: [
+      ...box(0, 1, 0, 1, 0, 1),
+      ...box(0, 2, 2, 2, 0, 0),
+      [2, 0, 0],
+      [2, 0, 1],
+      [2, 1, 0],
+    ],
+    blocks: ["cube2x2x2", "bar3", "corner3"],
+    par: 3,
+  },
 ];
 
 export const GRID_SIZE = 3;

@@ -48,6 +48,19 @@ describe("VSEPR 배치 — 결합각 회귀", () => {
     expect(measured).toBeLessThan(106);
   });
 
+  it("다중 중심 분자(메탄올)도 배치된다", () => {
+    const target = TARGETS.find((item) => item.id === "methanol");
+    const layout = layoutFor(target);
+    expect(layout.positions.size).toBe(5);
+    const center = layout.positions.get(layout.centerId);
+    const neighbors = layout.neighbors.map((id) => layout.positions.get(id));
+    for (const position of neighbors) {
+      const distance = position.clone().sub(center).length();
+      expect(distance).toBeGreaterThan(0.5);
+      expect(distance).toBeLessThan(2);
+    }
+  });
+
   it("전자 영역 수와 비공유 전자쌍 수가 규칙과 일치한다", () => {
     const cases = [
       { id: "water", domains: 4, lonePairs: 2 },

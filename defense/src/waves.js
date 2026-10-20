@@ -7,6 +7,8 @@ export const WAVES = [
   { groups: [{ type: "fast", count: 16, interval: 0.3 }, { type: "tank", count: 6, interval: 1 }] },
   { groups: [{ type: "tank", count: 8, interval: 0.9 }, { type: "boss", count: 1, interval: 1 }] },
   { groups: [{ type: "boss", count: 2, interval: 1.4 }, { type: "fast", count: 20, interval: 0.26 }] },
+  { groups: [{ type: "tank", count: 10, interval: 0.75 }, { type: "boss", count: 2, interval: 1.6 }] },
+  { groups: [{ type: "boss", count: 3, interval: 1.3 }, { type: "fast", count: 24, interval: 0.22 }, { type: "tank", count: 8, interval: 0.8 }] },
 ];
 
 export const DIFFICULTIES = [
