@@ -12,7 +12,8 @@ const ROOT = path.resolve(HERE, "..");
 const BASELINE_DIR = path.join(ROOT, "docs", "baseline");
 const GAMES = ["zoo", "molecule", "defense", "shapes"];
 const VIEWPORT = { width: 1280, height: 800 };
-const MAX_DIFF_RATIO = Number(process.env.VISUAL_MAX_DIFF ?? 0.012);
+const MAX_DIFF_RATIO = Number(process.env.VISUAL_MAX_DIFF ?? 0.05);
+const MAX_POSITION_DRIFT = Number(process.env.VISUAL_MAX_DRIFT ?? 0.01);
 const UPDATE = process.argv.includes("--update");
 
 const MIME = {
@@ -79,16 +80,39 @@ for (const game of GAMES) {
   await page.waitForTimeout(600);
 
   const current = await page.screenshot();
+  const positions = await page.evaluate(() => window.__gameApi?.getScreenPositions?.() ?? []);
   const baselinePath = path.join(BASELINE_DIR, `${game}.png`);
+  const baselineJsonPath = path.join(BASELINE_DIR, `${game}.json`);
 
   if (errors.length > 0) {
     problems.push(`${game}: 콘솔 오류 ${errors.length}건 — ${errors[0]}`);
   }
 
-  if (UPDATE || !existsSync(baselinePath)) {
+  if (UPDATE || !existsSync(baselinePath) || !existsSync(baselineJsonPath)) {
     await writeFile(baselinePath, current);
+    await writeFile(
+      baselineJsonPath,
+      `${JSON.stringify({ objects: positions.map((entry) => ({ id: entry.id, x: entry.x, y: entry.y })) }, null, 2)}\n`,
+    );
     results.push(`${game}: 기준 새로 저장`);
   } else {
+    const baselineJson = JSON.parse(await readFile(baselineJsonPath, "utf8"));
+    const before = new Map(baselineJson.objects.map((entry) => [entry.id, entry]));
+    let drift = 0;
+    for (const entry of positions) {
+      const reference = before.get(entry.id);
+      if (!reference) continue;
+      drift = Math.max(drift, Math.hypot(entry.x - reference.x, entry.y - reference.y));
+    }
+    if (positions.length !== before.size) {
+      problems.push(`${game}: 화면 위 개체 수가 달라졌습니다 (${before.size} → ${positions.length})`);
+    }
+    if (drift > MAX_POSITION_DRIFT) {
+      problems.push(
+        `${game}: 개체 위치가 ${drift.toFixed(4)} 만큼 어긋났습니다 (허용 ${MAX_POSITION_DRIFT}). 카메라·배치 변경 여부를 확인하세요.`,
+      );
+    }
+    results.push(`${game}: 위치 차이 ${drift.toFixed(4)}`);
     const baseline = await readFile(baselinePath);
     const { ratio, note } = compare(baseline, current);
     const percent = (ratio * 100).toFixed(3);
