@@ -16,7 +16,7 @@ const ROOT = path.resolve(HERE, "..");
 const CARD_DIR = path.join(ROOT, "docs", "cards");
 const CHECKS_FILE = path.join(ROOT, "docs", "checks.json");
 
-const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock", "sculpt"];
+const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock", "sculpt", "gears"];
 const ANGLES = ["card", "side", "top"];
 const VIEWPORT = { width: 1200, height: 750 };
 
@@ -73,7 +73,9 @@ async function runVitest(game, filter) {
 }
 
 async function testCount(game, previous) {
-  for (const filter of [game, `minimax-m31-test/${game}`]) {
+  // 폴더 경로로 좁힌다. 공용 부품(common/parts) 테스트가 게임 수에 중복 집계되지 않게.
+  const scoped = game === "common" ? "common" : `${game}/src`;
+  for (const filter of [scoped, `minimax-m31-test/${game}`]) {
     try {
       const count = await runVitest(game, filter);
       if (count > 0) return count;

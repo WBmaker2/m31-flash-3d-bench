@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "version": "1.0.0",
-  "description": "MiniMax M3.1 Flash가 만든 three.js 3D 게임 9종 — 폴리곤 동물원·3D 분자 빌더·3D 타워 디펜스·3D 도형 조립실·3D 탄도 타워·3D 로봇 팔 조립실·3D 미로 탈출·3D 무리 유도·3D 형태 공방",
+  "description": "MiniMax M3.1 Flash가 만든 three.js 3D 게임 10종 — 폴리곤 동물원·3D 분자 빌더·3D 타워 디펜스·3D 도형 조립실·3D 탄도 타워·3D 로봇 팔 조립실·3D 미로 탈출·3D 무리 유도·3D 형태 공방·3D 기어 공방",
   "scripts": {
-    "qa": "node scripts/shot.mjs zoo && node scripts/shot.mjs molecule && node scripts/shot.mjs defense && node scripts/shot.mjs shapes && node scripts/shot.mjs ballistics && node scripts/shot.mjs robot && node scripts/shot.mjs maze && node scripts/shot.mjs flock && node scripts/shot.mjs sculpt && node scripts/shot.mjs landing",
+    "qa": "node scripts/shot.mjs zoo && node scripts/shot.mjs molecule && node scripts/shot.mjs defense && node scripts/shot.mjs shapes && node scripts/shot.mjs ballistics && node scripts/shot.mjs robot && node scripts/shot.mjs maze && node scripts/shot.mjs flock && node scripts/shot.mjs sculpt && node scripts/shot.mjs gears && node scripts/shot.mjs landing",
     "qa:cards": "node scripts/card-shots.mjs",
     "vendor": "node scripts/sync-vendor.mjs",
     "qa:zoo": "node scripts/shot.mjs zoo",
@@ -22,7 +22,8 @@
     "qa:sync": "node scripts/check-sync.mjs",
     "fonts": "node scripts/sync-fonts.mjs",
     "qa:visual": "node scripts/visual-regress.mjs",
-    "qa:visual:update": "node scripts/visual-regress.mjs --update"
+    "qa:visual:update": "node scripts/visual-regress.mjs --update",
+    "qa:gears": "node scripts/shot.mjs gears"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
