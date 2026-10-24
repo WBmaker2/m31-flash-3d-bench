@@ -19,6 +19,7 @@ MiniMax M3.1 Flash(`minimax-m3.1-flash-free`)가 three.js 3D 구현을 어디까
 | [`gears/`](gears/) | 3D 기어 공방 | 회전 동역학 + 기어비 전파 + 톱니 위상 | 레벨 8종 · 각속도 ±1e-9 · 위상 불변량 |
 | [`paint/`](paint/) | 3D 물감칠 공방 | 표면 셀 그래프 + 국소 flood fill + 색 비교 채점 | 레벨 8종 · 일치율 % · 최소 횟수 |
 | [`dice/`](dice/) | 3D 주사위 놀이 | 시드 난수 결정론 + 자세→면 매핑 + 턴 상태 머신 | 보드 3종 · 기대값 3.5 · 면 일치 |
+| [`balance/`](balance/) | 3D 균형저울 | 역학 평형(모멘트) + 무게중심 + 최소 추 열거 | 레벨 8종 · 모멘트 ±1e-9 · par |
 
 공통 부분(저장·진행·결과 화면·3D 부품)은 [`common/`](common/) 에 있고, 게임 규칙은 각 폴더에
 남습니다. `common/parts/` 는 **공용 3D 부품 계층**이다. 톱니바퀴 메시와 기어비 계산은
@@ -42,14 +43,14 @@ python3 -m http.server 5174
 ```
 
 ES 모듈이라 `file://`로 직접 열면 안 됩니다. 임의의 정적 서버면 됩니다.
-`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` `flock/` `sculpt/` `gears/` `paint/` `dice/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
+`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` `flock/` `sculpt/` `gears/` `paint/` `dice/` `balance/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
 
 ## 검사 다시 돌리기
 
 ```bash
 npm install
-npm test          # 단위 테스트 481개
-npm run qa        # 게임 12종 + 랜딩 자동 검사
+npm test          # 단위 테스트 506개
+npm run qa        # 게임 13종 + 랜딩 자동 검사
 npm run qa:cards  # 카드 이미지 + checks.json 재생성
 ```
 
@@ -73,7 +74,7 @@ npm run qa                                     # 랜딩 검사 (링크·모달·
 
 ```bash
 npm install
-npm run qa             # 게임 12종 + 랜딩 전체 검사
+npm run qa             # 게임 13종 + 랜딩 전체 검사
 node scripts/shot.mjs zoo
 node scripts/shot.mjs molecule
 node scripts/shot.mjs defense
@@ -85,6 +86,7 @@ node scripts/shot.mjs sculpt
 node scripts/shot.mjs gears
 node scripts/shot.mjs paint
 node scripts/shot.mjs dice
+node scripts/shot.mjs balance
 node scripts/shot.mjs landing
 ```
 
@@ -97,7 +99,7 @@ node scripts/shot.mjs landing
   - 시점을 바꿔도 화면이 1% 미만으로만 변함 (장면이 비었거나 평평함)
 - 실패하면 사유를 출력하고 종료 코드 1입니다.
 
-`landing` 타깃은 랜딩 전용으로, 카드 링크 12개 응답 확인 → PLAY 클릭 → 모달 안에서 게임이
+`landing` 타깃은 랜딩 전용으로, 카드 링크 13개 응답 확인 → PLAY 클릭 → 모달 안에서 게임이
 실제로 준비되는지 확인 → **랜딩 표시 수치와 `docs/checks.json` 대조** → 모바일 화면 캡처를 합니다.
 
 ## 검증 3층
@@ -111,7 +113,7 @@ node scripts/shot.mjs landing
 | 3층 화면 판정 | `scripts/shot.mjs` | 안 보이는 것, 빈 장면 | `node scripts/shot.mjs <게임>` |
 
 1층 테스트는 게임 폴더 안에 있습니다(`*/src/*.test.js`). 부모 저장소의 vitest가 자동으로 수집하므로 `npm test` 한 번이면 전부 돕니다. `three`는 브라우저(CDN)와 Node(테스트) 양쪽에서 **같은 버전 0.186.1**을 씁니다.
-단위 테스트는 **481개**입니다(게임 388 + 공통 93).
+단위 테스트는 **506개**입니다(게임 388 + 공통 93).
 
 ## 코딩 규칙 (3D에서 반복해서 겪은 실패에서 온 것)
 
@@ -263,6 +265,7 @@ node scripts/shot.mjs landing
 
 ## 내역
 
+- 2026-10-24: 3D 균형저울(13번째 게임) 추가. 시소매 저울에 추를 올려 수평으로 맞추고 무게도 목표에 맞추는 게임. 모멘트 합 `Στ = Σ m·g·팔길이` 와 무게중심 `Σ(m·x)/Σm` 을 순수 계산으로 만들고, 저울판의 회전각이 계산값과 1e-9 안에서 맞는지를 2층 불변식이 매 0.5초마다 검사한다. 최소 추 개수(par)는 모든 배치를 전수 조사해 구한다. 단위 테스트 25개.
 - 2026-10-24: 3D 주사위 놀이(12번째 게임) 추가. 뱀과 사다리 보드에서 주사위를 굴리고
   말을 움직이는 보드게임. 굴림은 물리 시뮬레이션 대신 시드 난수로 값을 정한 뒤 그 값이
   위로 오는 자세로 주사위를 멈추고, 2층 불변식이 실제 3D 자세에서 읽은 면과 화면에 보고 있는

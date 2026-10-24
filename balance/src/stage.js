@@ -1,0 +1,186 @@
+// 렌더러 · 조명 · 받침대 · 카메라. 고정 스텝 루프.
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+export const VIEWS = {
+  default: { dir: [0, 0.78, 1], factor: 1.5 },
+  card: { dir: [0.07, 0.85, 1], factor: 1.55 },
+  front: { dir: [0, 0.5, 1], factor: 1.45 },
+  side: { dir: [1, 0.55, 0.1], factor: 1.5 },
+  top: { dir: [0, 1, 0.02], factor: 1.5 },
+};
+
+export function createStage(canvas) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.08;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1d1b21);
+  scene.fog = new THREE.Fog(0x1d1b21, 3, 8);
+
+  const camera = new THREE.PerspectiveCamera(46, 1, 0.05, 24);
+  const focus = { x: 0, y: 0.12, z: 0, radius: 0.6 };
+  camera.position.set(0, 0.16, 1);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 0.3;
+  controls.maxDistance = 3;
+  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.target.set(0, 0.12, 0);
+  controls.update();
+
+  scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x3a2c22, 0.92));
+  scene.add(new THREE.AmbientLight(0x6f7787, 0.44));
+
+  const sun = new THREE.DirectionalLight(0xfff2e0, 2.2);
+  sun.position.set(-0.6, 1.8, 1.1);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -0.8;
+  sun.shadow.camera.right = 0.8;
+  sun.shadow.camera.top = 0.8;
+  sun.shadow.camera.bottom = -0.8;
+  sun.shadow.camera.near = 0.2;
+  sun.shadow.camera.far = 5;
+  sun.shadow.bias = -0.0007;
+  sun.shadow.intensity = 0.72;
+  scene.add(sun);
+
+  const rim = new THREE.DirectionalLight(0x7fd8ff, 0.5);
+  rim.position.set(1.2, 0.8, -1.2);
+  scene.add(rim);
+
+  // 받침대 (밑판).
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(0.72, 0.04, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0x4c5a63, roughness: 0.9, metalness: 0.03 }),
+  );
+  base.position.set(0, 0.02, 0);
+  base.receiveShadow = true;
+  scene.add(base);
+
+  const pivot = new THREE.Group();
+  scene.add(pivot);
+
+  const post = new THREE.Mesh(
+    new THREE.ConeGeometry(0.06, 0.13, 4),
+    new THREE.MeshStandardMaterial({ color: 0x8a94a3, roughness: 0.45, metalness: 0.35 }),
+  );
+  post.rotation.y = Math.PI / 4;
+  post.position.y = 0.095;
+  post.castShadow = true;
+  pivot.add(post);
+
+  let lastFit = 1;
+
+  function applyView(name) {
+    const view = VIEWS[name] ?? VIEWS.default;
+    const target = new THREE.Vector3(focus.x, focus.y, focus.z);
+    const dir = new THREE.Vector3(...view.dir).normalize();
+    const distance = focus.radius * view.factor * lastFit;
+    camera.position.copy(target).add(dir.multiplyScalar(distance));
+    controls.target.copy(target);
+    controls.update();
+  }
+
+  function resize() {
+    const width = canvas.clientWidth || window.innerWidth;
+    const height = canvas.clientHeight || window.innerHeight;
+    renderer.setSize(width, height, false);
+    const aspect = width / Math.max(height, 1);
+    camera.aspect = aspect;
+    const fit = aspect < 1.1 ? Math.min(1.9, 1.1 / Math.max(aspect, 0.4)) : 1;
+    if (Math.abs(fit - lastFit) > 0.001) {
+      lastFit = fit;
+      applyView("default");
+    }
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  const timer = new THREE.Timer();
+  const STEP = 1 / 60;
+  const still = new URLSearchParams(window.location.search).has("still");
+
+  function start(update) {
+    let accumulator = 0;
+    renderer.setAnimationLoop(() => {
+      if (still) {
+        renderer.render(scene, camera);
+        if (window.__gameReady !== true) window.__gameReady = true;
+        return;
+      }
+      timer.update();
+      const delta = Math.min(timer.getDelta(), 0.1);
+      accumulator = Math.min(accumulator + delta, 0.25);
+      while (accumulator >= STEP) {
+        update(STEP);
+        accumulator -= STEP;
+      }
+      controls.update();
+      renderer.render(scene, camera);
+      if (window.__gameReady !== true) window.__gameReady = true;
+    });
+  }
+
+  function dispose() {
+    renderer.setAnimationLoop(null);
+    window.removeEventListener("resize", resize);
+    scene.traverse((object) => {
+      if (object.geometry) object.geometry.dispose();
+      const material = object.material;
+      if (!material) return;
+      const list = Array.isArray(material) ? material : [material];
+      for (const entry of list) {
+        if (entry.map) entry.map.dispose();
+        entry.dispose();
+      }
+    });
+    renderer.dispose();
+  }
+
+  return {
+    renderer,
+    scene,
+    camera,
+    controls,
+    start,
+    dispose,
+    focus,
+    applyView,
+    pivot,
+    get fit() {
+      return lastFit;
+    },
+    setFocus(next) {
+      focus.x = next.x;
+      focus.y = next.y;
+      focus.z = next.z;
+      focus.radius = next.radius;
+      pivot.position.x = next.x;
+      applyView("default");
+    },
+    resetView() {
+      applyView("default");
+    },
+  };
+}
+
+export function createViews(stage) {
+  let current = "default";
+
+  function setView(name) {
+    current = VIEWS[name] ? name : "default";
+    stage.applyView(current);
+  }
+
+  return { setView, apply: () => stage.applyView(current), get current() { return current; } };
+}
