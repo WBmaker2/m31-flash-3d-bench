@@ -192,6 +192,22 @@ export const STEPS = {
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
   },
+  dice: async (page, shot) => {
+    await page.getByRole("button", { name: "굴리기 (Space)" }).click();
+    await page.waitForTimeout(2200);
+    await shot("02-질문");
+    const choices = page.locator("#choices button");
+    if (await choices.count()) {
+      await choices.first().click();
+      await page.waitForTimeout(600);
+    }
+    await shot("03-다음차례");
+    await page.getByRole("button", { name: "보드 선택" }).click();
+    await page.waitForTimeout(500);
+    await shot("04-보드선택");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+  },
   sculpt: async (page, shot) => {
     await page.evaluate(() => window.__gameApi?.solve?.());
     await page.waitForTimeout(1200);
@@ -273,6 +289,12 @@ export const CARD_SETUP = {  zoo: async (page) => {
   paint: async (page) => {
     await page.evaluate(() => window.__gameApi?.loadLevel?.(1));
     await page.waitForTimeout(600);
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(900);
+  },
+  dice: async (page) => {
+    await page.evaluate(() => window.__gameApi?.loadLevel?.(1));
+    await page.waitForTimeout(700);
     await page.evaluate(() => window.__gameApi?.solve?.());
     await page.waitForTimeout(900);
   },

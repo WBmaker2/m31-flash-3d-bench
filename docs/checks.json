@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-24T04:35:10.398Z",
+  "generatedAt": "2026-10-24T04:40:51.695Z",
   "games": {
     "zoo": {
       "tests": 25,
@@ -66,14 +66,20 @@
       "consoleErrors": 0,
       "invariantViolations": 0,
       "viewDiffPercent": 17
+    },
+    "dice": {
+      "tests": 17,
+      "consoleErrors": 0,
+      "invariantViolations": 0,
+      "viewDiffPercent": 23
     }
   },
   "totals": {
-    "games": 11,
-    "tests": 445,
-    "gameTests": 371,
-    "commonTests": 74,
-    "views": 33,
+    "games": 12,
+    "tests": 481,
+    "gameTests": 388,
+    "commonTests": 93,
+    "views": 36,
     "consoleErrors": 0,
     "invariantViolations": 0
   }
