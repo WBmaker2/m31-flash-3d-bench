@@ -9,6 +9,7 @@ import { checkInvariants } from "./invariants.js";
 import { createProgress } from "../../common/progress.js";
 import { createInvariantBadge, createViewController } from "../../common/ui-kit.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const WORK_Y = 2.0;
 const MOLECULE_SCALE = 1.45;
@@ -136,11 +137,12 @@ function checkMolecule() {
 
   if (session) {
     const accepted = session.answer(result.ok);
+    // 마지막 문제를 틀렸어도 문제는 끝난 것이다. 멈추지 않고 결과를 띄운다.
+    if (accepted.finished) {
+      finishSession();
+      return;
+    }
     if (result.ok) {
-      if (accepted.finished) {
-        finishSession();
-        return;
-      }
       loadSessionTarget();
       refreshSessionPanel();
       setStatus("<strong>정답!</strong> 다음 문제를 준비했습니다.");
@@ -215,18 +217,29 @@ function finishSession() {
   ui.lockTargets(false);
   const levelIndex = LEVELS.findIndex((entry) => entry.id === level.id);
   const nextLevel = levelIndex >= 0 ? LEVELS[levelIndex + 1] : null;
+
+  if (!nextLevel) {
+    showEndingScreen({
+      progress: sessionProgress,
+      levels: LEVELS.map((entry) => ({ id: entry.id, label: entry.label })),
+      title: "분자 레벨을 모두 끝냈어요!",
+      rows: [
+        ["마지막 단계", level.label],
+        ["맞힌 문제", `${level.targets.length} / ${level.targets.length}`],
+        ["시간 보너스", `+${bonus}`],
+      ],
+      onFirst: () => startSession(LEVELS[0]),
+      onLevels: openSessionLevels,
+    });
+    return;
+  }
+
   // 단계를 통과하면 다음 단계로 바로 이어 갈 수 있게 첫 버튼으로 둔다.
-  const actions = nextLevel
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  const actions = [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 하기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
   showResult({
     kicker: "분자 레벨",
     title: level.label,

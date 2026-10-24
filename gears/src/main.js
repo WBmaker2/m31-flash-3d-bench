@@ -18,6 +18,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -159,22 +160,31 @@ function clearGears() {
   hud.setMessage("톱니바퀴를 모두 뺐습니다.");
 }
 
-function resultOptions(result) {
-  const hasNext = state.levelIndex + 1 < LEVELS.length;
-  return hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 배치" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 배치" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+function resultOptions() {
+  // 마지막 단계는 엔딩 화면으로 넘어가므로 여기서는 항상 다음 단계가 있다.
+  return [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 배치" },
+    { id: "levels", label: "레벨 선택" },
+  ];
 }
 
 function showResultPanel(result) {
+  if (result.cleared && state.levelIndex + 1 >= LEVELS.length) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "마지막 톱니까지 맞췄어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["미션 톱니바퀴", `${result.speed.toFixed(2)} 바퀴/초`],
+        ["사용한 톱니바퀴", `${result.used} 개`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    return;
+  }
   showResult({
     kicker: result.cleared ? "미션 성공" : "아직 멀었어요",
     title: state.level.label,
@@ -190,7 +200,7 @@ function showResultPanel(result) {
         ? "미션에 맞췄고 기어도 아꼈어요. 다음 단계로 넘어가세요."
         : "미션에 맞췄어요. 톱니바퀴를 더 적게 쓰면 3성이 됩니다."
       : "미션 조건을 다시 읽고 톱니바퀴 크기를 바꿔 보세요.",
-    actions: resultOptions(result),
+    actions: resultOptions(),
   }).then((action) => {
     if (action === "next") gotoLevel(state.levelIndex + 1);
     if (action === "first") gotoLevel(0);

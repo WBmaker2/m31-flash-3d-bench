@@ -18,6 +18,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -273,17 +274,29 @@ function finishLevel() {
   progress.record(state.level.id, { stars: result.stars, score: state.score });
 
   const hasNext = state.levelIndex + 1 < LEVELS.length;
-  const actions = hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 만들기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 만들기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+
+  if (result.cleared && !hasNext) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "마지막 조각까지 완성했어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["실루엣 일치도", `${state.iou.toFixed(3)}`],
+        ["사용한 부품", `${state.elements.length} 개`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    refreshHud();
+    return;
+  }
+
+  const actions = [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 만들기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
 
   showResult({
     kicker: result.cleared ? "조각 완성" : "아직 다듬어야 해요",

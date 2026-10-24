@@ -47,6 +47,18 @@ export function createProgress(gameId, options = {}) {
     starsTotal() {
       return levels.reduce((sum, level) => sum + (state[level.id]?.stars ?? 0), 0);
     },
+    starsMax() {
+      return levels.length * 3;
+    },
+    scoreTotal() {
+      return levels.reduce((sum, level) => sum + (state[level.id]?.bestScore ?? 0), 0);
+    },
+    clearedCount() {
+      return levels.filter((level) => (state[level.id]?.stars ?? 0) > 0).length;
+    },
+    perfectCount() {
+      return levels.filter((level) => (state[level.id]?.stars ?? 0) >= 3).length;
+    },
     record(levelId, result = {}) {
       const current = state[levelId];
       if (!current) return { improved: false, unlocked: [] };

@@ -11,6 +11,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -75,6 +76,20 @@ function pick(index) {
     state.resultShown = true;
     state.phase = "scored";
     progress.record(state.level.id, { stars: result.stars, score: result.score });
+    if (state.levelIndex + 1 >= LEVELS.length) {
+      showEndingScreen({
+        progress,
+        levels: LEVELS,
+        title: "마지막 상자까지 맞췄어요!",
+        rows: [
+          ["마지막 단계", state.level.label],
+          ["고른 보기", `${index + 1}번`],
+        ],
+        onFirst: () => gotoLevel(0),
+        onLevels: openLevels,
+      });
+      return;
+    }
     showResult({
       kicker: "정답",
       title: state.level.label,
@@ -93,18 +108,12 @@ function pick(index) {
 }
 
 function resultOptions() {
-  const hasNext = state.levelIndex + 1 < LEVELS.length;
-  return hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 보기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 보기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  // 마지막 단계는 엔딩 화면으로 넘어가므로 여기서는 항상 다음 단계가 있다.
+  return [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 보기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
 }
 
 function gotoLevel(index) {

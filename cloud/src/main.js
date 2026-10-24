@@ -17,6 +17,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const FALL_LIMIT = -4;
 
@@ -124,6 +125,21 @@ function checkGoal() {
     totalCoins: state.level.coins.length,
   });
   progress.record(state.level.id, { stars: value.stars, score: value.score });
+  if (state.levelIndex + 1 >= LEVELS.length) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "구름 끝에 도착했어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["마지막 점수", `${value.score}점`],
+        ["걸린 시간", `${state.elapsed.toFixed(1)}초`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    return;
+  }
   showResult({
     kicker: "결승점 도착",
     title: state.level.label,
@@ -147,18 +163,12 @@ function checkGoal() {
 }
 
 function resultOptions() {
-  const hasNext = state.levelIndex + 1 < LEVELS.length;
-  return hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  // 마지막 단계는 엔딩 화면으로 넘어가므로 여기서는 항상 다음 단계가 있다.
+  return [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 하기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
 }
 
 function gotoLevel(index) {

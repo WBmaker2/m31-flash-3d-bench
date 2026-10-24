@@ -6,6 +6,7 @@ import { ENEMY_TYPES, createEnemy, disposeEnemy, updateEnemy, updateHealthBar } 
 import { DIFFICULTIES, buildSpawnQueue, scoreFor, starsFor, wavesFor } from "./waves.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge, createViewController } from "../../common/ui-kit.js";
 
@@ -238,24 +239,37 @@ function finishGame(won) {
   difficultyProgress.record(difficulty.id, { stars, score, timeMs: 0 });
   const difficultyIndex = DIFFICULTIES.findIndex((entry) => entry.id === difficulty.id);
   const nextDifficulty = difficultyIndex >= 0 ? DIFFICULTIES[difficultyIndex + 1] : null;
+
+  if (won && !nextDifficulty) {
+    showEndingScreen({
+      progress: difficultyProgress,
+      levels: DIFFICULTIES.map((entry) => ({ id: entry.id, label: entry.label })),
+      title: "가장 어려운 난이도까지 막았어요!",
+      rows: [
+        ["마지막 난이도", `${difficulty.label} · ${difficulty.waves}웨이브`],
+        ["막은 웨이브", `${wavesCleared} / ${difficulty.waves}`],
+        ["처치한 적", `${kills}마리`],
+      ],
+      onFirst: () => {
+        difficulty = DIFFICULTIES[0];
+        resetGame();
+      },
+      onLevels: openDifficulties,
+    });
+    return;
+  }
+
   // 이 게임의 단계는 "난이도" 다. 승리했을 때 다음 난이도로 이어 갈 수 있게 첫 버튼으로 둔다.
-  const actions =
-    won && nextDifficulty
-      ? [
-          { id: "next", label: "다음 난이도", primary: true, pulse: true },
-          { id: "retry", label: "다시 하기" },
-          { id: "levels", label: "난이도 선택" },
-        ]
-      : won
-        ? [
-            { id: "first", label: "처음부터", primary: true, pulse: true },
-            { id: "retry", label: "다시 하기" },
-            { id: "levels", label: "난이도 선택" },
-          ]
-        : [
-            { id: "retry", label: "다시 하기", primary: true },
-            { id: "levels", label: "난이도 선택" },
-          ];
+  const actions = won
+    ? [
+        { id: "next", label: "다음 난이도", primary: true, pulse: true },
+        { id: "retry", label: "다시 하기" },
+        { id: "levels", label: "난이도 선택" },
+      ]
+    : [
+        { id: "retry", label: "다시 하기", primary: true },
+        { id: "levels", label: "난이도 선택" },
+      ];
   showResult({
     kicker: won ? "승리" : "패배",
     title: `${difficulty.label} · ${difficulty.waves}웨이브`,

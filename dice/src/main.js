@@ -20,6 +20,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const ROLL_DURATION = 0.9;
 const STEP_DURATION = 0.12;
@@ -137,6 +138,21 @@ function finishMove() {
     state.phase = "over";
     const winner = game.players[game.winner];
     progress.record(game.board.id, { stars: 3, score: winner.score });
+    if (state.boardIndex + 1 >= BOARDS.length) {
+      showEndingScreen({
+        progress,
+        levels: BOARDS.map((board) => ({ id: board.id, label: board.label })),
+        title: "마지막 보드까지 승리했어요!",
+        rows: [
+          ["마지막 보드", game.board.label],
+          ["우승자", `${winner.name} · ${winner.score}점`],
+        ],
+        onFirst: () => loadBoard(0),
+        onLevels: openLevels,
+      });
+      refreshHud();
+      return;
+    }
     showResult({
       kicker: "승리",
       title: game.board.label,
@@ -150,7 +166,7 @@ function finishMove() {
         { id: "levels", label: "보드 선택" },
       ],
     }).then((action) => {
-      if (action === "next") loadBoard(state.boardIndex + 1 >= BOARDS.length ? 0 : state.boardIndex + 1);
+      if (action === "next") loadBoard(state.boardIndex + 1);
       if (action === "retry") loadBoard(state.boardIndex);
       if (action === "levels") openLevels();
     });

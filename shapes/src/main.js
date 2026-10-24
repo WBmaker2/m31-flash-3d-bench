@@ -13,6 +13,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge, createViewController } from "../../common/ui-kit.js";
 import { createProgress, starsFor } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const GAME_ID = "shapes";
 const canvas = document.getElementById("scene");
@@ -228,20 +229,32 @@ function checkComplete() {
   const timeMs = performance.now() - startedAt;
   const stars = used <= par ? 3 : used <= par + 1 ? 2 : 1;
   const score = scoreFor({ par, used, timeMs });
-  const record = progress.record(level.id, { stars, score, timeMs });
+  progress.record(level.id, { stars, score, timeMs });
   const hasNext = levelIndex + 1 < LEVELS.length;
+
+  if (!hasNext) {
+    showToast("목표 모양 완성!", "info");
+    showEndingScreen({
+      progress,
+      levels: LEVELS.map((entry) => ({ id: entry.id, label: entry.label })),
+      title: "마지막 도형까지 완성했어요!",
+      rows: [
+        ["마지막 단계", level.label],
+        ["사용 블록", `${used}개`],
+        ["소요 시간", `${(timeMs / 1000).toFixed(1)}초`],
+      ],
+      onFirst: () => loadLevel(0),
+      onLevels: openLevels,
+    });
+    return;
+  }
+
   // 단계를 통과하면 다음 단계로 바로 이어 갈 수 있게 첫 버튼으로 둔다.
-  const actions = hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  const actions = [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 하기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
   showToast("목표 모양 완성!", "info");
   showResult({
     kicker: `레벨 ${String(levelIndex + 1).padStart(2, "0")}`,
@@ -253,11 +266,7 @@ function checkComplete() {
       ["사용 블록", `${used}개 (최소 ${par}개)`],
       ["소요 시간", `${(timeMs / 1000).toFixed(1)}초`],
     ],
-    detail: hasNext
-      ? "다음 단계가 열렸습니다."
-      : record.unlocked.length > 0
-        ? "다음 레벨이 열렸습니다."
-        : "",
+    detail: "다음 단계가 열렸습니다.",
     actions,
   }).then((action) => {
     if (action === "next") loadLevel(levelIndex + 1);
@@ -458,4 +467,5 @@ window.__gameApi = {
     }
   },
   levelIndex: () => levelIndex,
+  loadLevel,
 };

@@ -9,6 +9,7 @@ import { FIND_LEVELS, POSE_LABEL, createDex, createFinder } from "./dex.js";
 import { loadState, saveState } from "../../common/storage.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showPanel, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -225,18 +226,29 @@ function endFind() {
   findProgress.record(level.id, { stars, score, timeMs: (level.timeLimit - mode.timeLeft) * 1000 });
   const levelIndex = FIND_LEVELS.findIndex((entry) => entry.id === level.id);
   const nextLevel = levelIndex >= 0 ? FIND_LEVELS[levelIndex + 1] : null;
+
+  if (!nextLevel) {
+    showEndingScreen({
+      progress: findProgress,
+      levels: FIND_LEVELS.map((entry) => ({ id: entry.id, label: entry.label })),
+      title: "찾기 게임을 모두 끝냈어요!",
+      rows: [
+        ["마지막 단계", level.label],
+        ["찾은 수", `${mode.finder.index} / ${level.rounds}마리`],
+        ["시간 보너스", `+${bonus}`],
+      ],
+      onFirst: () => startFind(FIND_LEVELS[0]),
+      onLevels: openFindLevels,
+    });
+    return;
+  }
+
   // 단계를 통과하면 다음 단계로 바로 이어 갈 수 있게 첫 버튼으로 둔다.
-  const actions = nextLevel
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  const actions = [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 하기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
   showResult({
     kicker: "찾기 게임",
     title: level.label,

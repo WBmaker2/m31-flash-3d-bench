@@ -18,7 +18,9 @@ import {
 } from "./maze.js";
 import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
+import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const STEP_SECONDS = CELL_SIZE_M / MOVE_SPEED_MPS;
 const KEY_TO_DIRECTION = {
@@ -42,6 +44,8 @@ const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
 const views = createViews(stage);
 const badge = createInvariantBadge({ bottom: "130px" });
+
+const progress = createProgress("maze", { levels: LEVELS });
 
 const state = {
   levelIndex: 0,
@@ -171,17 +175,30 @@ function finishLevel() {
   const extra = state.steps - state.par;
   const hasNext = state.levelIndex + 1 < LEVELS.length;
 
-  const actions = hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  progress.record(state.level.id, { stars: result.stars, score });
+
+  if (!hasNext) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "마지막 미로까지 탈출했어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["걸은 길", `${state.steps} 칸`],
+        ["사용 시간", `${Math.floor(state.elapsed / 60)}분 ${Math.floor(state.elapsed % 60)}초`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    refreshStatus();
+    return;
+  }
+
+  const actions = [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 하기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
 
   showResult({
     kicker: "탈출 성공",
@@ -218,7 +235,7 @@ function openLevels() {
     levels: LEVELS.map((level, index) => ({
       id: level.id,
       label: `${String(index + 1).padStart(2, "0")} · ${level.label}`,
-      stars: 0,
+      stars: progress.levelState(level.id)?.stars ?? 0,
       unlocked: true,
     })),
     footerActions: [{ id: "close", label: "닫기" }],

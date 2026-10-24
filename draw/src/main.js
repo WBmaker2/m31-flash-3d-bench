@@ -11,6 +11,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -111,11 +112,31 @@ function pickAt(x, z) {
   place(col, row);
 }
 
+/** 마지막 단계를 완성했다면 엔딩 화면으로 넘어간다. 넘어갔으면 true. */
+function showEndingIfLast(value) {
+  if (!value.cleared) return false;
+  if (state.levelIndex + 1 < LEVELS.length) return false;
+  showEndingScreen({
+    progress,
+    levels: LEVELS,
+    title: "마지막 그림까지 완성했어요!",
+    rows: [
+      ["마지막 단계", state.level.label],
+      ["일치율", `${Math.round(value.rate * 100)}%`],
+      ["잘못 놓은 칸", `${value.extra} 개`],
+    ],
+    onFirst: () => gotoLevel(0),
+    onLevels: openLevels,
+  });
+  return true;
+}
+
 function finishLevel() {
   const value = result();
   state.phase = "scored";
   state.resultShown = true;
   progress.record(state.level.id, { stars: value.stars, score: value.score });
+  if (showEndingIfLast(value)) return;
   showResult({
     kicker: value.cleared ? "그림 완성" : "아직 덜 완성됐어요",
     title: state.level.label,
@@ -141,18 +162,12 @@ function finishLevel() {
 }
 
 function resultOptions() {
-  const hasNext = state.levelIndex + 1 < LEVELS.length;
-  return hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 그리기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 그리기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  // 마지막 단계는 엔딩 화면으로 넘어가므로 여기서는 항상 다음 단계가 있다.
+  return [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 그리기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
 }
 
 function checkMission() {
@@ -162,6 +177,7 @@ function checkMission() {
   state.resultShown = true;
   state.phase = "scored";
   progress.record(state.level.id, { stars: value.stars, score: value.score });
+  if (showEndingIfLast(value)) return;
   showResult({
     kicker: "그림 완성",
     title: state.level.label,

@@ -12,6 +12,7 @@ import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
 import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -142,21 +143,30 @@ function toggleHint() {
 }
 
 function resultOptions() {
-  const hasNext = state.levelIndex + 1 < LEVELS.length;
-  return hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 칠하기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 칠하기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+  // 마지막 단계는 엔딩 화면으로 넘어가므로 여기서는 항상 다음 단계가 있다.
+  return [
+    { id: "next", label: "다음 단계", primary: true, pulse: true },
+    { id: "retry", label: "다시 칠하기" },
+    { id: "levels", label: "레벨 선택" },
+  ];
 }
 
 function showResultPanel(result) {
+  if (result.cleared && state.levelIndex + 1 >= LEVELS.length) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "마지막 그림까지 완성했어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["색 일치율", `${Math.round(result.rate * 100)}%`],
+        ["칠한 횟수", `${result.clicks} 번`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    return;
+  }
   showResult({
     kicker: result.cleared ? "완성" : "아직 남았어요",
     title: state.level.label,

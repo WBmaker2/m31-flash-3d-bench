@@ -15,13 +15,17 @@ import {
 } from "./ik.js";
 import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
+import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const MOVE_SECONDS = 0.6;
 const LIFT_SECONDS = 0.45;
 const GRIP_SECONDS = 0.25;
 const LIFT_Y = 1.8; // 장애물 위를 넘나드는 높이
 const PILLAR_COLOR = 0x8c939c;
+
+const progress = createProgress("robot", { levels: LEVELS });
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -301,15 +305,34 @@ function judge(placement) {
   }
 
   const hasNext = state.levelIndex + 1 < LEVELS.length;
-  const actions = hasNext
+  const score = Math.max(0, Math.round((state.level.tolerance - error) * 1000));
+
+  progress.record(state.level.id, { stars: result.stars, score });
+
+  if (result.cleared && !hasNext) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "마지막 조립까지 끝냈어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["배치 오차", `${error.toFixed(3)} m`],
+        ["시도 횟수", `${state.attempts}회`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    return;
+  }
+
+  const actions = result.cleared
     ? [
         { id: "next", label: "다음 단계", primary: true, pulse: true },
         { id: "retry", label: "다시 하기" },
         { id: "levels", label: "레벨 선택" },
       ]
     : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
+        { id: "retry", label: "다시 하기", primary: true },
         { id: "levels", label: "레벨 선택" },
       ];
 
@@ -317,16 +340,14 @@ function judge(placement) {
     kicker: result.cleared ? "조립 완료" : "실패",
     title: state.level.label,
     stars: result.stars,
-    score: Math.max(0, Math.round((state.level.tolerance - error) * 1000)),
+    score,
     rows: [
       ["배치 오차", `${error.toFixed(3)} m`],
       ["허용 오차", `${state.level.tolerance.toFixed(2)} m`],
       ["시도 횟수", `${state.attempts}회`],
     ],
     detail: result.cleared
-      ? hasNext
-        ? "다음 단계로 이어서 조립해 보세요."
-        : "마지막 단계까지 마쳤습니다."
+      ? "다음 단계로 이어서 조립해 보세요."
       : "목표 판 중심에 더 가깝게 놓아 보세요.",
     actions,
   }).then((action) => {
@@ -348,7 +369,7 @@ function openLevels() {
     levels: LEVELS.map((level, index) => ({
       id: level.id,
       label: `${String(index + 1).padStart(2, "0")} · ${level.label}`,
-      stars: 0,
+      stars: progress.levelState(level.id)?.stars ?? 0,
       unlocked: true,
     })),
     footerActions: [{ id: "close", label: "닫기" }],

@@ -19,10 +19,14 @@ import { resolveImpact, resolveOutcome } from "./session.js";
 import { launchState, predictTrajectory } from "./aim.js";
 import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
+import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const IMPACT_PAUSE_SECONDS = 0.75;
 const MAX_DEBRIS = 28;
+
+const progress = createProgress("ballistics", { levels: LEVELS });
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -218,27 +222,40 @@ function finishLevel(outcome) {
   const hasNext = state.levelIndex + 1 < LEVELS.length;
   const isLast = !hasNext;
 
+  progress.record(state.level.id, { stars, score });
+
+  if (outcome === "won" && isLast) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "마지막 발사까지 명중했어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["사용 샷", `${state.shotsUsed} / ${state.level.shots}`],
+        ["남은 샷 보너스", `${shotsLeft * 50}점`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    updateStatus();
+    return;
+  }
+
   // 단계를 통과하면 다음 단계로 바로 넘어갈 수 있게 첫 버튼으로 둔다.
   const actions =
-    outcome === "won" && hasNext
+    outcome === "won"
       ? [
           { id: "next", label: "다음 단계", primary: true, pulse: true },
           { id: "retry", label: "다시 하기" },
           { id: "levels", label: "레벨 선택" },
         ]
-      : outcome === "won"
-        ? [
-            { id: "first", label: "처음부터", primary: true, pulse: true },
-            { id: "retry", label: "다시 하기" },
-            { id: "levels", label: "레벨 선택" },
-          ]
-        : [
-            { id: "retry", label: "다시 하기", primary: true },
-            { id: "levels", label: "레벨 선택" },
-          ];
+      : [
+          { id: "retry", label: "다시 하기", primary: true },
+          { id: "levels", label: "레벨 선택" },
+        ];
 
   showResult({
-    kicker: outcome === "won" ? (isLast ? "최종 클리어" : "클리어") : "실패",
+    kicker: outcome === "won" ? "클리어" : "실패",
     title: state.level.label,
     stars,
     score,
@@ -249,11 +266,9 @@ function finishLevel(outcome) {
     ],
     detail:
       outcome === "won"
-        ? isLast
-          ? "마지막 단계까지 클리어했습니다. 처음부터 다시 도전해도 좋습니다."
-          : state.shotsUsed <= state.level.par
-            ? "표준 샷 수 이하로 클리어했습니다."
-            : "표준보다 샷을 많이 썼습니다. 조준을 다듬어 보세요."
+        ? state.shotsUsed <= state.level.par
+          ? "표준 샷 수 이하로 클리어했습니다."
+          : "표준보다 샷을 많이 썼습니다. 조준을 다듬어 보세요."
         : "샷이 모두 떨어졌습니다. 각도를 다시 잡아 보세요.",
     actions,
   }).then((action) => {
@@ -276,7 +291,7 @@ function openLevels() {
     levels: LEVELS.map((level, index) => ({
       id: level.id,
       label: `${String(index + 1).padStart(2, "0")} · ${level.label}`,
-      stars: 0,
+      stars: progress.levelState(level.id)?.stars ?? 0,
       unlocked: true,
     })),
     footerActions: [{ id: "close", label: "닫기" }],

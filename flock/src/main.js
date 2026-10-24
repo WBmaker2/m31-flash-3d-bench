@@ -7,11 +7,15 @@ import { ARENA, GATE_LIGHT_RADIUS, LEVELS, buildGates, evaluateFlock, scoreForFl
 import { FLOCK, flockMetrics, scatterFlock, stepFlock } from "./flock.js";
 import { checkInvariants } from "./invariants.js";
 import { createInvariantBadge } from "../../common/ui-kit.js";
+import { createProgress } from "../../common/progress.js";
 import { showLevelSelect, showResult, showToast } from "../../common/overlay.js";
+import { showEndingScreen } from "../../common/ending.js";
 
 const LIGHT_SPEED_MPS = 12;
 const LIGHT_HEIGHT = 3;
 const SPREAD_SMOOTHING = 0.12;
+
+const progress = createProgress("flock", { levels: LEVELS });
 
 const canvas = document.getElementById("scene");
 const stage = createStage(canvas);
@@ -177,17 +181,37 @@ function finishLevel(outcome) {
     state.level,
   );
   const hasNext = state.levelIndex + 1 < LEVELS.length;
-  const actions = hasNext
-    ? [
-        { id: "next", label: "다음 단계", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ]
-    : [
-        { id: "first", label: "처음부터", primary: true, pulse: true },
-        { id: "retry", label: "다시 하기" },
-        { id: "levels", label: "레벨 선택" },
-      ];
+
+  progress.record(state.level.id, { stars: result.stars, score });
+
+  if (outcome === "won" && !hasNext) {
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "마지막 무리까지 유도했어요!",
+      rows: [
+        ["마지막 단계", state.level.label],
+        ["통과한 링", `${state.activeIndex} / ${state.gates.length}`],
+        ["흩어짐", `${state.spread.toFixed(1)} m`],
+      ],
+      onFirst: () => gotoLevel(0),
+      onLevels: openLevels,
+    });
+    refreshStatus();
+    return;
+  }
+
+  const actions =
+    outcome === "won"
+      ? [
+          { id: "next", label: "다음 단계", primary: true, pulse: true },
+          { id: "retry", label: "다시 하기" },
+          { id: "levels", label: "레벨 선택" },
+        ]
+      : [
+          { id: "retry", label: "다시 하기", primary: true },
+          { id: "levels", label: "레벨 선택" },
+        ];
 
   showResult({
     kicker: outcome === "won" ? "무리 유도 성공" : "시간 초과",
@@ -226,7 +250,7 @@ function openLevels() {
     levels: LEVELS.map((level, index) => ({
       id: level.id,
       label: `${String(index + 1).padStart(2, "0")} · ${level.label}`,
-      stars: 0,
+      stars: progress.levelState(level.id)?.stars ?? 0,
       unlocked: true,
     })),
     footerActions: [{ id: "close", label: "닫기" }],

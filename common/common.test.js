@@ -8,7 +8,13 @@ import {
   STORAGE_VERSION,
 } from "./storage.js";
 import { createProgress, starsFor } from "./progress.js";
-import { buildLevelPanel, buildResultPanel } from "./overlay.js";
+import { buildEndingPanel, buildLevelPanel, buildResultPanel } from "./overlay.js";
+import {
+  endingActions,
+  endingRows,
+  praiseFor,
+  summarizeProgress,
+} from "./ending.js";
 
 afterEach(() => {
   window.localStorage.clear();
@@ -113,6 +119,17 @@ describe("진행 관리", () => {
     expect(progress.isUnlocked("two")).toBe(false);
   });
 
+  it("합계 조회가 전체 성적을 모아 준다", () => {
+    const progress = createProgress("demo", { levels });
+    progress.record("one", { stars: 3, score: 500 });
+    progress.record("two", { stars: 2, score: 300 });
+    expect(progress.starsTotal()).toBe(5);
+    expect(progress.starsMax()).toBe(9);
+    expect(progress.scoreTotal()).toBe(800);
+    expect(progress.clearedCount()).toBe(2);
+    expect(progress.perfectCount()).toBe(1);
+  });
+
   it("진행 상태가 저장되고 다시 읽힌다", () => {
     const first = createProgress("demo", { levels });
     first.record("one", { stars: 2, score: 700 });
@@ -187,5 +204,88 @@ describe("공통 화면", () => {
     expect(buttons[0].disabled).toBe(false);
     expect(buttons[1].disabled).toBe(true);
     expect(buttons[0].querySelectorAll(".m31-star.is-on")).toHaveLength(3);
+  });
+});
+
+describe("엔딩 화면", () => {
+  const levels = [
+    { id: "one", label: "하나" },
+    { id: "two", label: "둘" },
+    { id: "three", label: "셋" },
+  ];
+
+  function seeded() {
+    const progress = createProgress("ending", { levels });
+    progress.record("one", { stars: 3, score: 500 });
+    progress.record("two", { stars: 2, score: 300 });
+    return progress;
+  }
+
+  it("진행 기록에서 총점과 별을 합산한다", () => {
+    const summary = summarizeProgress(seeded(), levels);
+    expect(summary.total).toBe(3);
+    expect(summary.stars).toBe(5);
+    expect(summary.maxStars).toBe(9);
+    expect(summary.score).toBe(800);
+    expect(summary.cleared).toBe(2);
+    expect(summary.perfect).toBe(1);
+    expect(summary.levels[0]).toMatchObject({ index: 1, id: "one", label: "하나", stars: 3, score: 500 });
+  });
+
+  it("아직 하지 않은 단계는 0점으로 잡는다", () => {
+    const summary = summarizeProgress(createProgress("ending", { levels }), levels);
+    expect(summary.stars).toBe(0);
+    expect(summary.score).toBe(0);
+    expect(summary.cleared).toBe(0);
+    expect(summary.levels).toHaveLength(3);
+  });
+
+  it("만점이면 가장 엄격한 격려 문구가 나온다", () => {
+    const progress = createProgress("ending", { levels });
+    levels.forEach((level) => progress.record(level.id, { stars: 3, score: 100 }));
+    const summary = summarizeProgress(progress, levels);
+    expect(praiseFor(summary)).toContain("만점");
+    expect(praiseFor(summary)).not.toContain("아쉽");
+  });
+
+  it("성적이 낮으면 다독을 가는 격려 문구가 나온다", () => {
+    const progress = createProgress("ending", { levels });
+    progress.record("one", { stars: 1, score: 10 });
+    const summary = summarizeProgress(progress, levels);
+    expect(praiseFor(summary)).toContain("고마워요");
+  });
+
+  it("기본 통계와 버튼이 정해진 모습으로 나온다", () => {
+    const summary = summarizeProgress(seeded(), levels);
+    expect(endingRows(summary)).toEqual([
+      ["클리어한 단계", "2 / 3"],
+      ["만점 단계", "1 개"],
+    ]);
+    expect(endingActions().map((action) => action.id)).toEqual(["first", "levels", "exit"]);
+    expect(endingActions()[0].pulse).toBe(true);
+  });
+
+  it("엔딩 화면에 총점과 단계별 성적이 들어간다", () => {
+    const summary = summarizeProgress(seeded(), levels);
+    const panel = buildEndingPanel({
+      kicker: "모든 단계 클리어",
+      title: "모두 끝냈어요!",
+      summary,
+      rows: endingRows(summary),
+      detail: "축하해요!",
+      actions: endingActions(),
+    });
+    expect(panel.querySelector(".m31-kicker").textContent).toBe("모든 단계 클리어");
+    expect(panel.querySelector(".m31-title").textContent).toBe("모두 끝냈어요!");
+    expect(panel.querySelector(".m31-ending-score-value").textContent).toBe("800");
+    expect(panel.querySelector(".m31-ending-stars").textContent).toBe("★ 5 / 9");
+    expect(panel.querySelectorAll(".m31-ending-row")).toHaveLength(3);
+    expect(panel.querySelectorAll(".m31-ending-row")[0].querySelectorAll(".m31-star.is-on")).toHaveLength(3);
+    expect(panel.textContent).toContain("클리어한 단계");
+    expect(panel.textContent).toContain("축하해요!");
+    const buttons = [...panel.querySelectorAll("button")];
+    expect(buttons.map((button) => button.dataset.action)).toEqual(["first", "levels", "exit"]);
+    expect(buttons[0].classList.contains("btn-pulse")).toBe(true);
+    expect(buttons[0].classList.contains("m31-btn-primary")).toBe(true);
   });
 });

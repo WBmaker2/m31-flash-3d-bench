@@ -23,6 +23,11 @@
   background: rgba(0, 0, 0, 0.78);
 }
 
+.m31-dialog-wide {
+  width: min(600px, 94vw);
+  max-width: min(600px, 94vw);
+}
+
 .m31-panel {
   padding: 26px 26px 24px;
 }
@@ -170,6 +175,108 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 엔딩 화면 — 모든 단계를 마친 뒤의 축하 화면 */
+.m31-panel-ending {
+  max-width: 560px;
+}
+
+.m31-ending-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border: 1px solid var(--m31-line);
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 184, 0, 0.16),
+    rgba(255, 184, 0, 0.02) 62%
+  );
+}
+
+.m31-ending-score {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.m31-ending-score-value {
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--m31-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.m31-ending-score-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--m31-ink-soft);
+}
+
+.m31-ending-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.m31-ending-stars {
+  font-size: 19px;
+  line-height: 1.1;
+  color: var(--m31-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.m31-ending-sub {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--m31-ink-soft);
+}
+
+.m31-ending-list {
+  display: grid;
+  gap: 4px;
+  max-height: min(320px, 38vh);
+  overflow-y: auto;
+  margin-top: 12px;
+  padding-right: 4px;
+}
+
+.m31-ending-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto 62px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  border: 1px solid var(--m31-line);
+  border-radius: 9px;
+  font-size: 12.5px;
+}
+
+.m31-ending-row .m31-stars {
+  margin-bottom: 0;
+}
+
+.m31-ending-index {
+  color: var(--m31-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.m31-ending-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.m31-ending-points {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--m31-ink-soft);
 }
 
 .m31-toast {
