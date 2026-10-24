@@ -248,6 +248,15 @@ export const STEPS = {
     await page.waitForTimeout(400);
     await shot("03-전개도");
   },
+  rail: async (page, shot) => {
+    await page.evaluate(() => window.__gameApi?.loadLevel?.(0));
+    await page.waitForTimeout(600);
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(2600);
+    await shot("02-기차");
+    await page.waitForTimeout(1200);
+    await shot("03-결과");
+  },
   sculpt: async (page, shot) => {
     await page.evaluate(() => window.__gameApi?.solve?.());
     await page.waitForTimeout(1200);
@@ -361,6 +370,12 @@ export const CARD_SETUP = {  zoo: async (page) => {
     await page.waitForTimeout(700);
     await page.evaluate(() => window.__gameApi?.solve?.());
     await page.waitForTimeout(700);
+  },
+  rail: async (page) => {
+    await page.evaluate(() => window.__gameApi?.loadLevel?.(0));
+    await page.waitForTimeout(700);
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(2400);
   },
   sculpt: async (page) => {
     await page.evaluate(() => window.__gameApi?.loadLevel?.(5));
