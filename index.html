@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>M3.1 FLASH / 3D BENCH — MiniMax M3.1 Flash가 만든 3D 게임 17종</title>
+    <title>M3.1 FLASH / 3D BENCH — MiniMax M3.1 Flash가 만든 3D 게임 18종</title>
     <meta
       name="description"
-      content="MiniMax M3.1 Flash가 직접 구현한 three.js 3D 게임 17종. 폴리곤 동물원, 3D 분자 빌더, 3D 타워 디펜스, 3D 도형 조립실, 3D 탄도 타워, 3D 로봇 팔 조립실, 3D 미로 탈출, 3D 무리 유도, 3D 형태 공방, 3D 기어 공방, 3D 물감칠 공방, 3D 주사위 놀이, 3D 균형저울을 바로 플레이할 수 있습니다."
+      content="MiniMax M3.1 Flash가 직접 구현한 three.js 3D 게임 18종. 폴리곤 동물원, 3D 분자 빌더, 3D 타워 디펜스, 3D 도형 조립실, 3D 탄도 타워, 3D 로봇 팔 조립실, 3D 미로 탈출, 3D 무리 유도, 3D 형태 공방, 3D 기어 공방, 3D 물감칠 공방, 3D 주사위 놀이, 3D 균형저울을 바로 플레이할 수 있습니다."
     />
     <link rel="stylesheet" href="vendor/fonts/fonts.css" />
     <style>
@@ -630,7 +630,7 @@
       <section class="wrap hero">
         <div class="hero-main">
           <p class="eyebrow"><b>MINIMAX M3.1 FLASH</b> · THREE.JS 0.186.1 · 빌드 단계 없음</p>
-          <h1>3D 게임 17종을<br />모델이 직접 만들었습니다</h1>
+          <h1>3D 게임 18종을<br />모델이 직접 만들었습니다</h1>
           <p class="lede">
             MiniMax M3.1 Flash가 여덟 개의 three.js 게임을 처음부터 끝까지 구현했습니다.
             숫자는 <b>단위 테스트</b>가, 화면은 <b>4시점 자동 판정</b>이 확인합니다.
@@ -642,15 +642,15 @@
         <dl class="hero-stats">
           <div>
             <dt>게임</dt>
-            <dd data-check="totals.games" data-value="17">17</dd>
+            <dd data-check="totals.games" data-value="18">18</dd>
           </div>
           <div>
             <dt>단위 테스트</dt>
-            <dd data-check="totals.tests" data-value="591">591개</dd>
+            <dd data-check="totals.tests" data-value="606">606개</dd>
           </div>
           <div>
             <dt>자동 검사 화면</dt>
-            <dd data-check="totals.views" data-value="51">51</dd>
+            <dd data-check="totals.views" data-value="54">54</dd>
           </div>
           <div>
             <dt>콘솔 오류</dt>
@@ -1139,6 +1139,44 @@
             </div>
           </article>
 
+          <article class="card" data-frames data-game="draw">
+            <div class="card-media">
+              <img
+                class="card-frame is-active"
+                src="docs/cards/draw-card.png"
+                alt="3D 그림 그리기 — 픽셀 그림을 큐브로 만드는 화면"
+              />
+              <img class="card-frame" src="docs/cards/draw-side.png" alt="" />
+              <img class="card-frame" src="docs/cards/draw-top.png" alt="" />
+            </div>
+            <div class="card-body">
+              <p class="card-index"><b>18</b> 자유 배치 · 스냅샷 비교</p>
+              <h3>3D 그림 그리기</h3>
+              <p class="card-desc">
+                목표 픽셀 그림을 큐브로 하나씩 올려 그대로 만드는 게임입니다. 맞은 칸 비율이 수치로 계산됩니다.
+              </p>
+              <dl class="card-checks">
+                <div>
+                  <dt>단위 테스트</dt>
+                  <dd data-check="games.draw.tests" data-value="8">8개</dd>
+                </div>
+                <div>
+                  <dt>콘솔 오류</dt>
+                  <dd data-check="games.draw.consoleErrors" data-value="0">0건</dd>
+                </div>
+                <div>
+                  <dt>불변식 위반</dt>
+                  <dd data-check="games.draw.invariantViolations" data-value="0">0건</dd>
+                </div>
+                <div>
+                  <dt>시점 간 화면 차이</dt>
+                  <dd data-check="games.draw.viewDiffPercent" data-value="22">22%</dd>
+                </div>
+              </dl>
+              <button class="play" type="button" data-href="draw/index.html" data-title="3D 그림 그리기">PLAY</button>
+            </div>
+          </article>
+
           <article class="card" data-frames data-game="rail">
             <div class="card-media">
               <img
@@ -1344,7 +1382,7 @@
             <h3>순수 계산 검사</h3>
             <p>
               브라우저 없이 숫자로 확인합니다. 분자 결합각이 104.5° ± 0.5°인지, 동물이
-              겹치지 않는지, 적이 길을 따라 잘 움직이는지, 포신 궤적이 계산과 맞는지, 로봇 팔이 목표에 정확히 닿는지, 미로의 최적 경로가 실제로 최단인지, 무리의 행동 규칙이 수치로 맞는지를, 조각 표면의 부피가 해석해와 맞는지를, 기어비와 톱니 위상이 1e-9 안에서 맞는지를, 색칠한 면이 목표 그림과 얼마나 같은지를, 주사위 자세에서 읽은 면이 보고 있는 값과 맞는지를, 저울이 수평일 때 모멘트 합이 0 인지, 빠른 낙하에도 구름을 뚫지 않는지를, 빛이 반사될 때 입사각과 반사각이 같은지를, 전개도가 6면으로 겹치지 않고 접히는지, 선로가 실제로 이어지는지 591개 테스트가 검사합니다.
+              겹치지 않는지, 적이 길을 따라 잘 움직이는지, 포신 궤적이 계산과 맞는지, 로봇 팔이 목표에 정확히 닿는지, 미로의 최적 경로가 실제로 최단인지, 무리의 행동 규칙이 수치로 맞는지를, 조각 표면의 부피가 해석해와 맞는지를, 기어비와 톱니 위상이 1e-9 안에서 맞는지를, 색칠한 면이 목표 그림과 얼마나 같은지를, 주사위 자세에서 읽은 면이 보고 있는 값과 맞는지를, 저울이 수평일 때 모멘트 합이 0 인지, 빠른 낙하에도 구름을 뚫지 않는지를, 빛이 반사될 때 입사각과 반사각이 같은지를, 전개도가 6면으로 겹치지 않고 접히는지, 선로가 실제로 이어지는지, 놓은 그림이 목표와 얼마나 같은지를 606개 테스트가 검사합니다.
             </p>
           </div>
           <div class="layer">
@@ -1392,7 +1430,7 @@
     <footer>
       <div class="wrap foot-inner">
         <span>MiniMax M3.1 Flash (free) · three.js 0.186.1 · 정적 파일만으로 구성</span>
-        <span>단위 테스트 591개 · 자동 검사 화면 51장</span>
+        <span>단위 테스트 606개 · 자동 검사 화면 54장</span>
       </div>
     </footer>
 
