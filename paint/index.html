@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>3D 물감칠 공방 — three.js</title>
+    <link rel="stylesheet" href="../common/styles.css" />
+    <style>
+      :root {
+        --accent: #ff8fb1;
+        --teal: #57d9d0;
+        --ink: #ecebe4;
+        --ink-soft: #9aa39c;
+        --line: rgba(255, 255, 255, 0.13);
+        --panel: rgba(18, 21, 28, 0.9);
+        --panel-solid: #12151c;
+        --font-mono: "IBM Plex Mono", "Nanum Gothic Coding", ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #1d1b22;
+        color: var(--ink);
+        font-family: var(--font-mono);
+        -webkit-font-smoothing: antialiased;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #scene {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+
+      .panel {
+        position: fixed;
+        z-index: 2;
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+
+      .panel-head {
+        top: 18px;
+        left: 18px;
+        width: 372px;
+        max-width: calc(100vw - 36px);
+        padding: 14px 18px;
+      }
+
+      .panel-head .kicker {
+        margin: 0 0 4px;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+      }
+
+      .panel-head h1 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .panel-head p {
+        margin: 0;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--ink-soft);
+      }
+
+      .panel-head .status {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+        color: var(--ink);
+      }
+
+      .panel-head .status.is-bad {
+        color: #ffb0a5;
+      }
+
+      .stats {
+        margin: 10px 0 0;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+        display: grid;
+        grid-template-columns: auto 1fr auto 1fr;
+        gap: 5px 12px;
+        font-size: 12.5px;
+      }
+
+      .stats dt {
+        color: var(--ink-soft);
+        margin: 0;
+      }
+
+      .stats dd {
+        margin: 0;
+        text-align: right;
+        font-weight: 600;
+      }
+
+      .meter {
+        margin-top: 10px;
+      }
+
+      .meter .label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--ink-soft);
+        margin-bottom: 5px;
+      }
+
+      .track {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+
+      .track > div {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: var(--teal);
+        transition: width 0.18s linear, background 0.2s ease;
+      }
+
+      .track > div.is-warn {
+        background: #ffc451;
+      }
+
+      .track > div.is-bad {
+        background: #ff6b5c;
+      }
+
+      .target-list {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        font-size: 11.5px;
+        color: var(--ink-soft);
+      }
+
+      .target-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+      }
+
+      .swatch {
+        width: 11px;
+        height: 11px;
+        border-radius: 3px;
+        display: inline-block;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+      }
+
+      .panel-bar {
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        max-width: min(820px, calc(100vw - 36px));
+      }
+
+      .panel-bar .group {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .panel-bar .group + .group {
+        padding-left: 8px;
+        border-left: 1px solid var(--line);
+      }
+
+      .panel-bar button {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        color: var(--ink);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .panel-bar button:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .panel-bar button.is-on {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(255, 143, 177, 0.16);
+      }
+
+      .panel-bar .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #1d1b22;
+        font-weight: 700;
+      }
+
+      .panel-bar .btn-primary:hover {
+        color: #1d1b22;
+      }
+
+      .btn-pulse {
+        animation: btn-pulse 1.9s ease-in-out infinite;
+      }
+
+      @keyframes btn-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 143, 177, 0.5);
+        }
+        50% {
+          box-shadow: 0 0 0 9px rgba(255, 143, 177, 0);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .btn-pulse {
+          animation: none;
+        }
+      }
+
+      .hint-keys {
+        right: 18px;
+        bottom: 18px;
+        padding: 9px 13px;
+        font-size: 11.5px;
+        line-height: 1.8;
+        color: var(--ink-soft);
+      }
+
+      .hint-keys b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .back-link {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        font: 500 11px/1 var(--font-mono);
+        letter-spacing: 0.12em;
+        text-decoration: none;
+        color: var(--ink-soft);
+        background: var(--panel-solid);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 13px;
+      }
+
+      .back-link:hover {
+        color: var(--accent);
+        border-color: rgba(255, 143, 177, 0.5);
+      }
+
+      @media (max-width: 760px) {
+        .panel-head {
+          top: 8px;
+          left: 8px;
+          right: 8px;
+          width: auto;
+          max-width: none;
+          padding: 9px 12px;
+        }
+
+        .panel-head h1 {
+          font-size: 15px;
+          margin-bottom: 2px;
+        }
+
+        .panel-head p {
+          font-size: 11.5px;
+          line-height: 1.45;
+        }
+
+        .panel-head .status {
+          margin-top: 5px;
+          padding-top: 5px;
+        }
+
+        .stats {
+          margin-top: 6px;
+          padding-top: 6px;
+          gap: 3px 8px;
+          font-size: 11px;
+        }
+
+        .meter {
+          margin-top: 6px;
+        }
+
+        .target-list {
+          margin-top: 6px;
+          padding-top: 6px;
+          font-size: 11px;
+        }
+
+        .panel-bar {
+          left: 8px;
+          right: 8px;
+          bottom: 8px;
+          transform: none;
+          max-width: none;
+          justify-content: flex-start;
+          padding: 8px 9px;
+          gap: 6px;
+        }
+
+        .panel-bar .group {
+          flex-wrap: wrap;
+        }
+
+        .panel-bar .group + .group {
+          padding-left: 6px;
+        }
+
+        .panel-bar button {
+          font-size: 11.5px;
+          padding: 7px 9px;
+        }
+
+        .hint-keys {
+          display: none;
+        }
+
+        .back-link {
+          top: 10px;
+          right: 10px;
+          left: auto;
+          transform: none;
+          padding: 7px 10px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas
+      id="scene"
+      role="img"
+      aria-label="3D 물감칠 공방 3D 화면. 나무 인형을 목표 그림 색으로 칠하는 게임입니다."
+    ></canvas>
+    <a class="back-link" href="../index.html">&#8592; GAMES</a>
+
+    <section class="panel panel-head">
+      <p class="kicker">물감칠 공방</p>
+      <h1 id="level-name">로봇 얼굴</h1>
+      <p id="level-hint">목표 그림을 보고 색을 맞춰 보세요.</p>
+      <p class="status" id="status-line">색을 고르고 인형을 눌러 칠하세요.</p>
+
+      <dl class="stats">
+        <dt>일치율</dt>
+        <dd id="stat-rate">0%</dd>
+        <dt>칠한 횟수</dt>
+        <dd id="stat-clicks">0</dd>
+        <dt>최소</dt>
+        <dd id="stat-par">0</dd>
+      </dl>
+      <div class="meter">
+        <div class="label"><span>목표 그림과 같은 색</span><span>100% 면 완성</span></div>
+        <div class="track"><div id="rate-bar"></div></div>
+      </div>
+
+      <div class="target-list" id="target-list"></div>
+    </section>
+
+    <nav class="panel panel-bar">
+      <div class="group" id="palette"></div>
+      <div class="group">
+        <button type="button" id="btn-hint">목표 보기 (H)</button>
+        <button type="button" id="btn-clear">처음으로</button>
+        <button type="button" id="btn-levels">레벨 선택</button>
+        <button type="button" id="btn-score" class="btn-primary btn-pulse">채점 (Space)</button>
+      </div>
+    </nav>
+
+    <p class="panel hint-keys">
+      <b>인형 누르기</b> 그 나무 조각 전체 칠하기 · <b>1~6</b> 색 고르기<br />
+      <b>H</b> 목표 보기 · <b>Space</b> 채점 · <b>R</b> 처음으로<br />
+      마우스 드래그로 시점 바꾸기
+    </p>
+
+    <script>
+      (async () => {
+        const localMap = {
+          imports: {
+            three: "../vendor/three.module.js",
+            "three/addons/": "../vendor/addons/",
+          },
+        };
+        const remoteMap = {
+          imports: {
+            three: "https://unpkg.com/three@0.186.1/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.186.1/examples/jsm/",
+          },
+        };
+        let map = localMap;
+        try {
+          await import("../vendor/three.module.js");
+        } catch {
+          map = remoteMap;
+        }
+        const tag = document.createElement("script");
+        tag.type = "importmap";
+        tag.textContent = JSON.stringify(map);
+        document.head.append(tag);
+        await import("./src/main.js");
+      })();
+    </script>
+  </body>
+</html>

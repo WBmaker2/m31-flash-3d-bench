@@ -17,6 +17,7 @@ MiniMax M3.1 Flash(`minimax-m3.1-flash-free`)가 three.js 3D 구현을 어디까
 | [`flock/`](flock/) | 3D 무리 유도 | 다체 에머전트 행동 + 이웃 탐색 | 레벨 8종 · 규칙별 수치 검증 |
 | [`sculpt/`](sculpt/) | 3D 형태 공방 | 암시적 곡면(SDF) + CSG + 등표면 메시 추출 | 레벨 8종 · 실루엣 IoU · 메시 부피 |
 | [`gears/`](gears/) | 3D 기어 공방 | 회전 동역학 + 기어비 전파 + 톱니 위상 | 레벨 8종 · 각속도 ±1e-9 · 위상 불변량 |
+| [`paint/`](paint/) | 3D 물감칠 공방 | 표면 셀 그래프 + 국소 flood fill + 색 비교 채점 | 레벨 8종 · 일치율 % · 최소 횟수 |
 
 공통 부분(저장·진행·결과 화면·3D 부품)은 [`common/`](common/) 에 있고, 게임 규칙은 각 폴더에
 남습니다. `common/parts/` 는 **공용 3D 부품 계층**이다. 톱니바퀴 메시와 기어비 계산은
@@ -40,14 +41,14 @@ python3 -m http.server 5174
 ```
 
 ES 모듈이라 `file://`로 직접 열면 안 됩니다. 임의의 정적 서버면 됩니다.
-`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` `flock/` `sculpt/` `gears/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
+`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` `flock/` `sculpt/` `gears/` `paint/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
 
 ## 검사 다시 돌리기
 
 ```bash
 npm install
-npm test          # 단위 테스트 407개
-npm run qa        # 게임 10종 + 랜딩 자동 검사
+npm test          # 단위 테스트 445개
+npm run qa        # 게임 11종 + 랜딩 자동 검사
 npm run qa:cards  # 카드 이미지 + checks.json 재생성
 ```
 
@@ -71,7 +72,7 @@ npm run qa                                     # 랜딩 검사 (링크·모달·
 
 ```bash
 npm install
-npm run qa             # 게임 10종 + 랜딩 전체 검사
+npm run qa             # 게임 11종 + 랜딩 전체 검사
 node scripts/shot.mjs zoo
 node scripts/shot.mjs molecule
 node scripts/shot.mjs defense
@@ -81,6 +82,7 @@ node scripts/shot.mjs maze
 node scripts/shot.mjs flock
 node scripts/shot.mjs sculpt
 node scripts/shot.mjs gears
+node scripts/shot.mjs paint
 node scripts/shot.mjs landing
 ```
 
@@ -93,7 +95,7 @@ node scripts/shot.mjs landing
   - 시점을 바꿔도 화면이 1% 미만으로만 변함 (장면이 비었거나 평평함)
 - 실패하면 사유를 출력하고 종료 코드 1입니다.
 
-`landing` 타깃은 랜딩 전용으로, 카드 링크 10개 응답 확인 → PLAY 클릭 → 모달 안에서 게임이
+`landing` 타깃은 랜딩 전용으로, 카드 링크 11개 응답 확인 → PLAY 클릭 → 모달 안에서 게임이
 실제로 준비되는지 확인 → **랜딩 표시 수치와 `docs/checks.json` 대조** → 모바일 화면 캡처를 합니다.
 
 ## 검증 3층
@@ -107,7 +109,7 @@ node scripts/shot.mjs landing
 | 3층 화면 판정 | `scripts/shot.mjs` | 안 보이는 것, 빈 장면 | `node scripts/shot.mjs <게임>` |
 
 1층 테스트는 게임 폴더 안에 있습니다(`*/src/*.test.js`). 부모 저장소의 vitest가 자동으로 수집하므로 `npm test` 한 번이면 전부 돕니다. `three`는 브라우저(CDN)와 Node(테스트) 양쪽에서 **같은 버전 0.186.1**을 씁니다.
-단위 테스트는 **407개**입니다(게임 352 + 공통 55).
+단위 테스트는 **445개**입니다(게임 371 + 공통 74).
 
 ## 코딩 규칙 (3D에서 반복해서 겪은 실패에서 온 것)
 
@@ -259,6 +261,11 @@ node scripts/shot.mjs landing
 
 ## 내역
 
+- 2026-10-24: 3D 물감칠 공방(11번째 게임) 추가. 나무 인형을 목표 그림 색으로 칠하는 색칠놀이.
+  한 번 누르면 이어진 나무 조각 전체가 통째로 칠해지고(flood fill), 떨어진 같은 색은 따로
+  칠해야 한다. 표면 복셀과 목표 색의 비교로 일치율(%)을 계산하고, 목표를 완성하는 최소
+  칠하기 횟수(par)를 전수 시뮬레이션으로 구해 고정했다. 공용 부품 계층 `common/parts/` 에
+  복셀 집합·인접 그래프·flood fill 을 남겼다. 단위 테스트 38개.
 - 2026-10-24: 3D 기어 공방(10번째 게임) 추가. 톱니바퀴를 판의 칸에 끼우면 크랭크와 맞물려
   비율만큼 빠르게, 반대 방향으로 돌아가는 게임. 각속도 전파(ω_B = −ω_A·N_A/N_B)와 톱니
   위상(θ₁N₁ + θ₂N₂) 불변량을 수치로 고정했고, 톱니가 실제로 맞물려 보이도록 위상 오프셋을

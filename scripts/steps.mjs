@@ -174,6 +174,24 @@ export const STEPS = {
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
   },
+  paint: async (page, shot) => {
+    await page.evaluate(() => window.__gameApi?.loadLevel?.(1));
+    await page.waitForTimeout(600);
+    await page.getByRole("button", { name: "목표 보기 (H)" }).click();
+    await page.waitForTimeout(400);
+    await shot("02-목표보기");
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(1000);
+    await shot("03-완성");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(600);
+    await shot("04-칠한모형");
+    await page.getByRole("button", { name: "레벨 선택" }).click();
+    await page.waitForTimeout(500);
+    await shot("05-레벨선택");
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+  },
   sculpt: async (page, shot) => {
     await page.evaluate(() => window.__gameApi?.solve?.());
     await page.waitForTimeout(1200);
@@ -249,6 +267,12 @@ export const CARD_SETUP = {  zoo: async (page) => {
   gears: async (page) => {
     await page.evaluate(() => window.__gameApi?.loadLevel?.(1));
     await page.waitForTimeout(500);
+    await page.evaluate(() => window.__gameApi?.solve?.());
+    await page.waitForTimeout(900);
+  },
+  paint: async (page) => {
+    await page.evaluate(() => window.__gameApi?.loadLevel?.(1));
+    await page.waitForTimeout(600);
     await page.evaluate(() => window.__gameApi?.solve?.());
     await page.waitForTimeout(900);
   },
