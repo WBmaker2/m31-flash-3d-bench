@@ -16,7 +16,7 @@ const ROOT = path.resolve(HERE, "..");
 const CARD_DIR = path.join(ROOT, "docs", "cards");
 const CHECKS_FILE = path.join(ROOT, "docs", "checks.json");
 
-const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock", "sculpt", "gears", "paint", "dice", "balance", "cloud"];
+const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock", "sculpt", "gears", "paint", "dice", "balance", "cloud", "laser"];
 const ANGLES = ["card", "side", "top"];
 const VIEWPORT = { width: 1200, height: 750 };
 
