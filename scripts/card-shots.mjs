@@ -9,6 +9,7 @@ import { promisify } from "node:util";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 import { CARD_SETUP } from "./steps.mjs";
+import { GAME_IDS } from "./games.mjs";
 
 const run = promisify(execFile);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -16,7 +17,7 @@ const ROOT = path.resolve(HERE, "..");
 const CARD_DIR = path.join(ROOT, "docs", "cards");
 const CHECKS_FILE = path.join(ROOT, "docs", "checks.json");
 
-const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock", "sculpt", "gears", "paint", "dice", "balance", "cloud", "laser", "net", "rail", "draw"];
+const GAMES = GAME_IDS;
 const ANGLES = ["card", "side", "top"];
 const VIEWPORT = { width: 1200, height: 750 };
 
@@ -75,7 +76,7 @@ async function runVitest(game, filter) {
 async function testCount(game, previous) {
   // 폴더 경로로 좁힌다. 공용 부품(common/parts) 테스트가 게임 수에 중복 집계되지 않게.
   const scoped = game === "common" ? "common" : `${game}/src`;
-  for (const filter of [scoped, `minimax-m31-test/${game}`]) {
+  for (const filter of [scoped, `m31-flash-3d-bench/${game}`]) {
     try {
       const count = await runVitest(game, filter);
       if (count > 0) return count;

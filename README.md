@@ -3,7 +3,8 @@
 MiniMax M3.1 Flash(`minimax-m3.1-flash-free`)가 three.js 3D 구현을 어디까지 해낼 수 있는지 확인하는 실험입니다.
 외부 API 호출 없이 모델이 코드를 직접 작성했고, 숫자는 단위 테스트가, 화면은 4시점 자동 판정이 확인합니다.
 
-각 게임은 서로 완전히 분리되어 있습니다. 폴더를 통째로 다른 곳으로 옮겨도 그대로 실행됩니다.
+각 게임의 규칙과 화면은 각 폴더에 있고, 저장·진행·결과 화면·공용 3D 부품은 `common/`에 모읍니다.
+게임 폴더를 다른 곳으로 옮길 때는 `common/`과 `vendor/`도 함께 옮겨야 합니다.
 
 | 폴더 | 게임 | 검증하는 능력 | 판정 |
 |---|---|---|---|
@@ -30,7 +31,7 @@ MiniMax M3.1 Flash(`minimax-m3.1-flash-free`)가 three.js 3D 구현을 어디까
 남습니다. `common/parts/` 는 **공용 3D 부품 계층**이다. 톱니바퀴 메시와 기어비 계산은
 10번째 게임이 남긴 것이고, 다음 게임이 그대로 물려받는다.
 
-각 게임 폴더에는 그 게임만 필요한 파일만 들어 있습니다. 공유 런타임 의존성은 없습니다.
+각 게임 폴더에는 그 게임만 필요한 파일만 들어 있고, 공유 계층은 `common/`에 있습니다.
 
 ## 공개 주소 (배포)
 
@@ -48,20 +49,21 @@ python3 -m http.server 5174
 ```
 
 ES 모듈이라 `file://`로 직접 열면 안 됩니다. 임의의 정적 서버면 됩니다.
-`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` `flock/` `sculpt/` `gears/` `paint/` `dice/` `balance/` 폴더에 바로 들어가서 개별로 실행해도 됩니다.
+`zoo/` `molecule/` `defense/` `shapes/` `ballistics/` `robot/` `maze/` `flock/` `sculpt/` `gears/` `paint/` `dice/` `balance/` `cloud/` `laser/` `net/` `rail/` `draw/` 폴더에 바로 들어가서 개별로 실행해도 됩니다. 이때도 저장소 루트의 `common/`과 `vendor/`가 필요합니다.
 
 ## 검사 다시 돌리기
 
 ```bash
 npm install
-npm test          # 단위 테스트 613개
+npm test          # 단위 테스트 615개
 npm run qa        # 게임 18종 + 랜딩 자동 검사
+npm run qa:ui     # 공용 스타일·백링크·터치 영역·랜딩 수치 계약
 npm run qa:cards  # 카드 이미지 + checks.json 재생성
 ```
 
 ## 랜딩 페이지
 
-`index.html`이 이 저장소의 진입점입니다. 9개 게임을 카드로 소개하고, 카드의
+`index.html`이 이 저장소의 진입점입니다. 18개 게임을 카드로 소개하고, 카드의
 **PLAY** 버튼을 누르면 같은 자리에서 바로 플레이합니다(모달 iframe). 마우스를 카드에 올리면
 그 게임의 다른 각도가 차례로 보입니다.
 
@@ -92,6 +94,11 @@ node scripts/shot.mjs gears
 node scripts/shot.mjs paint
 node scripts/shot.mjs dice
 node scripts/shot.mjs balance
+node scripts/shot.mjs cloud
+node scripts/shot.mjs laser
+node scripts/shot.mjs net
+node scripts/shot.mjs rail
+node scripts/shot.mjs draw
 node scripts/shot.mjs landing
 ```
 
@@ -106,6 +113,27 @@ node scripts/shot.mjs landing
 
 `landing` 타깃은 랜딩 전용으로, 카드 링크 18개 응답 확인 → PLAY 클릭 → 모달 안에서 게임이
 실제로 준비되는지 확인 → **랜딩 표시 수치와 `docs/checks.json` 대조** → 모바일 화면 캡처를 합니다.
+`npm run qa:ui`는 브라우저 없이 18개 페이지의 공용 스타일·폰트·백링크·터치 영역과
+랜딩 카드 수를 검사합니다. `npm run qa`는 대표 게임에서 엔딩 화면과 공용 팝업 스타일도 확인합니다.
+
+## 검사 산출물
+
+| 경로 | 내용 | 정책 |
+|---|---|---|
+| `docs/shots/` | 게임별 4시점·조작·모바일 스크린샷 | 검사 증거로 커밋 |
+| `docs/cards/` | 랜딩 카드 이미지 54장 | `npm run qa:cards`로 재생성 후 커밋 |
+| `docs/baseline/` | 화면 회귀 기준 PNG·투영 좌표 | `npm run qa:visual:update` 후 커밋 |
+
+PNG가 이력에 쌓여 `.git`이 커집니다. 새로 큰 이미지 묶음을 추가할 때는 Git LFS 또는
+"대표 증거만 커밋" 정책을 먼저 정합니다. 검사 자체는 CI에서 다시 돌릴 수 있으므로
+모든 중간 산출물을 보관할 필요는 없습니다.
+
+## 벤치마크 문서
+
+- [`docs/BENCHMARK.md`](docs/BENCHMARK.md) — 능력 축, 수치 계약, 반복 실패 유형, 평가 rubric
+- [`docs/RUNS.md`](docs/RUNS.md) — 모델·커밋·검사 결과 실행 로그
+- [`docs/IMPROVEMENT-PLAN.md`](docs/IMPROVEMENT-PLAN.md) — 이번 개선 작업의 범위와 순서
+- [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md) — 접근성 적용 내역과 남은 과제
 
 ## 검증 3층
 
@@ -118,7 +146,7 @@ node scripts/shot.mjs landing
 | 3층 화면 판정 | `scripts/shot.mjs` | 안 보이는 것, 빈 장면 | `node scripts/shot.mjs <게임>` |
 
 1층 테스트는 게임 폴더 안에 있습니다(`*/src/*.test.js`). 부모 저장소의 vitest가 자동으로 수집하므로 `npm test` 한 번이면 전부 돕니다. `three`는 브라우저(CDN)와 Node(테스트) 양쪽에서 **같은 버전 0.186.1**을 씁니다.
-단위 테스트는 **613개**입니다(게임 448 + 공통 165).
+단위 테스트는 **615개**입니다(게임 448 + 공통 167).
 
 ## 코딩 규칙 (3D에서 반복해서 겪은 실패에서 온 것)
 
@@ -283,13 +311,16 @@ node scripts/shot.mjs landing
 - `renderer.setSize(w, h, false)` — CSS 크기는 CSS가, 버퍼 크기는 JS가 담당.
 - 게임 루프는 `setAnimationLoop` + `dt = Math.min(clock.getDelta(), 0.1)` + 1/60 고정 스텝 누적. 탭 전환으로 `dt`가 튀는 사고를 막는다.
 - 물리엔진 미사용. 충돌·사거리·이동은 전부 직접 계산한다.
-- **`common/parts/` = 공용 3D 부품 계층.** 톱니바퀴 메시·기어비 계산(`gear3d`/`gearMesh`),
-  복셀 집합·flood fill(`paint3d`), 주사위 메시·보드 계산(`board3d`/`dice3d`)은 게임 밖에서
-  재사용한다. 게임이 하나를 남기고 다음 게임이 물려받는다.
+- **`common/parts/` = 게임에서 분리한 3D 계산·메시 부품.** 톱니바퀴 메시·기어비 계산
+  (`gear3d`/`gearMesh`), 복셀 집합·flood fill(`paint3d`), 주사위 메시·보드 계산
+  (`board3d`/`dice3d`)이 있다. 아직 게임 간 재사용은 제한적이며, 새 게임이 가져다 쓰는
+  후보 계층으로 둔다. 공통 실행 계층은 `common/engine/`이다.
 
 자세한 설계는 [`docs/PLAN.md`](docs/PLAN.md) 를 보세요.
 
 ## 내역
+
+- 2026-10-25: 18종의 **신뢰성·확장성·접근성**을 정리했다. ① defense·molecule이 공용 스타일을 불러오지 않아 레벨/결과/엔딩 팝업이 흰 상자로 뜨던 문제를 고치고, 18개 게임의 `← GAMES`가 모달 iframe 안에서 랜딩을 다시 열던 문제를 `target="_top"`으로 고쳤다. ② cloud·maze·flock에 공용 터치 패드(`common/touch-pad.js`)를 붙여 태블릿에서도 조작할 수 있게 했다. ③ `common/engine/stage.js`·`loop.js`로 18벌의 렌더 루프·리사이즈·4시점·정리 코드를 공통 계층으로 모아 `stage.js`를 3,062줄에서 1,943줄로 줄였다. ④ `scripts/games.mjs` 단일 게임 목록과 `npm run qa:ui` 계약 검사(공용 스타일·폰트·백링크·터치 영역·랜딩 수치)를 추가했다. ⑤ QA에 엔딩 화면·공용 팝업 스타일·모바일 터치 버튼 검사를 넣고, maze의 1인칭 투영 좌표가 NaN이던 기준도 고쳤다. ⑥ 접근성: `aria-live` 상태 알림, 별점 라벨, dialog 제목/포커스 복귀, PLAY 버튼 게임명. ⑦ 랜딩에 **MY PROGRESS** 대시보드(게임별 별·완료 단계·총점, 이어서 하기, 전체 초기화)와 카드 lazy loading을 추가했다. ⑧ 문서 수치(9개→18개, 12종→18종, 613→615개, 옛 경로)를 바로잡고 `docs/BENCHMARK.md`·`docs/RUNS.md`·`docs/IMPROVEMENT-PLAN.md`를 남겼다. 단위 테스트 2개 추가(615개).
 
 - 2026-10-24: 모든 단계가 있는 게임에 **엔딩 화면**을 넣었다. 3D 구름 점프처럼 마지막 단계를 끝내면 1단계로 되돌아가던 흐름을 바꿔, 축하·격려 화면이 먼저 나오게 했다. 화면에는 ① 모든 단계의 총점(각 단계 최고 점수의 합) ② 모은 별(`★ 21 / 24`) ③ 클리어한 단계 수와 만점 단계 수 ④ 단계별 성적 목록(번호·이름·별·점수)이 보인다. 격려 문구는 성적에 따라 달라진다(만점이면 "만점" 축하, 적으면 "다시 도전하면 더 높은 점수를 만들 수 있어요"처럼 다독을 가는 말). 버튼은 **"1단계부터 다시 시작"**(다음에 누를 곳이라 금빛 펄스로 안내) · **"레벨 선택"** · **"게임 종료"**(게임 목록으로 돌아가기) 3개다. 구름 점프를 시작으로 주사위·빛 거울·미로·전개도·기차 레일·그리기·균형저울·탄도 타워·무리 유도·기어·물감칠·로봇 팔·형태 공방·도형 조립·도감 찾기·분자 레벨·타워 디펜스까지 **18개 게임 전부**가 같은 엔딩 화면을 쓴다. 미로·탄도 타워·무리 유도·로봇 팔은 진행 기록(별·점수 저장)이 없어 총점을 모을 수 없었는데 이제 기록을 남기도록 고치고, 레벨 선택 화면에도 별이 보이게 했다. 분자 빌더는 마지막 문제를 틀리면 세션이 멈춰 버리던 버그도 같이 고쳤다(문제 수는 늘었으니 결과 화면이 뜨는 쪽으로). 단위 테스트 7개 추가(613개).
 

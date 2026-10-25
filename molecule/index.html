@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>3D 분자 빌더 — three.js</title>
+    <link rel="stylesheet" href="../common/styles.css" />
     <style>
       :root {
         --bg: #08131c;
@@ -407,7 +408,7 @@
     </style>
   </head>
   <body>
-    <a class="back-link" href="../index.html">&#8592; GAMES</a>
+    <a class="back-link" href="../index.html" target="_top">&#8592; GAMES</a>
     <canvas id="scene" role="img" aria-label="3D 분자 빌더 3D 화면. 원자를 놓고 결합해 목표 분자를 만듭니다. 아래 버튼으로 원자를 고르고 자동 배치·검사를 실행할 수 있습니다."></canvas>
     <div class="vignette"></div>
 
@@ -443,7 +444,7 @@
       </div>
     </section>
 
-    <section class="panel panel-status" id="status">
+    <section class="panel panel-status" id="status" aria-live="polite">
       <strong>준비됨.</strong> 목표 분자를 고르고 <em>예시 불러오기</em>를 눌러 시작하세요.
     </section>
 

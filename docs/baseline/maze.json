@@ -2,8 +2,8 @@
   "objects": [
     {
       "id": "player",
-      "x": null,
-      "y": null
+      "x": 0,
+      "y": 0
     },
     {
       "id": "exit",

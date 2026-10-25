@@ -1,6 +1,7 @@
 // 렌더러 · 조명 · 받침대 · 카메라. 고정 스텝 루프.
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createStageRuntime } from "../../common/engine/stage.js";
 
 /** 검사 시점. 모형 중심과 크기에 맞춰 카메라가 자동으로 물러난다. */
 export const VIEWS = {
@@ -75,111 +76,26 @@ export function createStage(canvas) {
   top.receiveShadow = true;
   scene.add(top);
 
-  let lastFit = 1;
-
-  function applyView(name) {
-    const view = VIEWS[name] ?? VIEWS.default;
-    const target = new THREE.Vector3(focus.x, focus.y, focus.z);
-    const dir = new THREE.Vector3(...view.dir).normalize();
-    const distance = focus.radius * view.factor * lastFit;
-    camera.position.copy(target).add(dir.multiplyScalar(distance));
-    controls.target.copy(target);
-    controls.update();
-  }
-
-  function resize() {
-    const width = canvas.clientWidth || window.innerWidth;
-    const height = canvas.clientHeight || window.innerHeight;
-    renderer.setSize(width, height, false);
-    const aspect = width / Math.max(height, 1);
-    camera.aspect = aspect;
-    const fit = aspect < 1.1 ? Math.min(1.9, 1.1 / Math.max(aspect, 0.4)) : 1;
-    if (Math.abs(fit - lastFit) > 0.001) {
-      lastFit = fit;
-      applyView("default");
-    }
-    camera.updateProjectionMatrix();
-  }
-  resize();
-  window.addEventListener("resize", resize);
-
-  const timer = new THREE.Timer();
-  const STEP = 1 / 60;
-  const still = new URLSearchParams(window.location.search).has("still");
-
-  function start(update) {
-    let accumulator = 0;
-    renderer.setAnimationLoop(() => {
-      if (still) {
-        renderer.render(scene, camera);
-        if (window.__gameReady !== true) window.__gameReady = true;
-        return;
-      }
-      timer.update();
-      const delta = Math.min(timer.getDelta(), 0.1);
-      accumulator = Math.min(accumulator + delta, 0.25);
-      while (accumulator >= STEP) {
-        update(STEP);
-        accumulator -= STEP;
-      }
-      controls.update();
-      renderer.render(scene, camera);
-      if (window.__gameReady !== true) window.__gameReady = true;
-    });
-  }
-
-  function dispose() {
-    renderer.setAnimationLoop(null);
-    window.removeEventListener("resize", resize);
-    scene.traverse((object) => {
-      if (object.geometry) object.geometry.dispose();
-      const material = object.material;
-      if (!material) return;
-      const list = Array.isArray(material) ? material : [material];
-      for (const entry of list) {
-        if (entry.map) entry.map.dispose();
-        entry.dispose();
-      }
-    });
-    renderer.dispose();
-  }
-
   return {
     renderer,
     scene,
     camera,
     controls,
-    start,
-    dispose,
-    focus,
-    applyView,
-    get fit() {
-      return lastFit;
-    },
-    setFocus(next) {
-      focus.x = next.x;
-      focus.y = next.y;
-      focus.z = next.z;
-      focus.radius = next.radius;
-      // 받침대도 모형 크기에 맞춰 줄인다.
-      const size = Math.max(0.3, focus.radius * 0.72);
-      stand.scale.setScalar(size / 0.52);
-      top.scale.setScalar(size / 0.52);
-      applyView("default");
-    },
-    resetView() {
-      applyView("default");
-    },
+    ...createStageRuntime({
+      canvas,
+      renderer,
+      scene,
+      camera,
+      controls,
+      views: VIEWS,
+      focus,
+      onFocus: () => {
+        const size = Math.max(0.3, focus.radius * 0.72);
+        stand.scale.setScalar(size / 0.52);
+        top.scale.setScalar(size / 0.52);
+      },
+    }),
   };
 }
 
-export function createViews(stage) {
-  let current = "default";
-
-  function setView(name) {
-    current = VIEWS[name] ? name : "default";
-    stage.applyView(current);
-  }
-
-  return { setView, apply: () => stage.applyView(current), get current() { return current; } };
-}
+export { createViews } from "../../common/engine/stage.js";

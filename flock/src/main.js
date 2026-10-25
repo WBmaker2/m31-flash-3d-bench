@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { createStage, createViews } from "./stage.js";
 import { createFlockView } from "./flockView.js";
 import { createHud } from "./hud.js";
+import { createDirectionPad } from "../../common/touch-pad.js";
 import { ARENA, GATE_LIGHT_RADIUS, LEVELS, buildGates, evaluateFlock, scoreForFlock, startRegion } from "./levels.js";
 import { FLOCK, flockMetrics, scatterFlock, stepFlock } from "./flock.js";
 import { checkInvariants } from "./invariants.js";
@@ -47,6 +48,22 @@ const state = {
 const hud = createHud({
   onRetry: () => loadLevel(state.levelIndex),
   onLevels: openLevels,
+});
+
+const TOUCH_DIRECTION = {
+  up: { x: 0, z: -1 },
+  right: { x: 1, z: 0 },
+  down: { x: 0, z: 1 },
+  left: { x: -1, z: 0 },
+};
+createDirectionPad(document.getElementById("touch-pad"), {
+  label: "불빛 이동",
+  onDirection: (id) => {
+    const direction = TOUCH_DIRECTION[id];
+    if (!direction) return;
+    state.lightDirection = { ...direction };
+    state.solving = false;
+  },
 });
 
 function clampToArena(value, limit) {

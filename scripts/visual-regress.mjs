@@ -6,11 +6,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
+import { GAME_IDS } from "./games.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 const BASELINE_DIR = path.join(ROOT, "docs", "baseline");
-const GAMES = ["zoo", "molecule", "defense", "shapes", "ballistics", "robot", "maze", "flock", "sculpt", "gears", "paint", "dice", "balance", "cloud", "laser", "net", "rail", "draw"];
+const GAMES = process.env.VISUAL_GAMES
+  ? GAME_IDS.filter((game) => process.env.VISUAL_GAMES.split(",").includes(game))
+  : GAME_IDS;
 const VIEWPORT = { width: 1280, height: 800 };
 const MAX_DIFF_RATIO = Number(process.env.VISUAL_MAX_DIFF ?? 0.05);
 const MAX_POSITION_DRIFT = Number(process.env.VISUAL_MAX_DRIFT ?? 0.01);
@@ -98,10 +101,18 @@ for (const game of GAMES) {
   } else {
     const baselineJson = JSON.parse(await readFile(baselineJsonPath, "utf8"));
     const before = new Map(baselineJson.objects.map((entry) => [entry.id, entry]));
+    const invalid = positions.filter((entry) => !Number.isFinite(entry.x) || !Number.isFinite(entry.y));
+    if (invalid.length > 0) {
+      problems.push(`${game}: 투영 좌표가 유한하지 않습니다 (${invalid.map((entry) => entry.id).join(", ")})`);
+    }
     let drift = 0;
     for (const entry of positions) {
       const reference = before.get(entry.id);
-      if (!reference) continue;
+      if (!reference || !Number.isFinite(entry.x) || !Number.isFinite(entry.y)) continue;
+      if (!Number.isFinite(reference.x) || !Number.isFinite(reference.y)) {
+        problems.push(`${game}: 기준 좌표가 유한하지 않습니다 (${entry.id}). npm run qa:visual:update 로 갱신하세요.`);
+        continue;
+      }
       drift = Math.max(drift, Math.hypot(entry.x - reference.x, entry.y - reference.y));
     }
     if (positions.length !== before.size) {

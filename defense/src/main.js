@@ -305,6 +305,7 @@ function openDifficulties() {
       stars: difficultyProgress.levelState(entry.id)?.stars ?? 0,
       unlocked: true,
     })),
+    footerActions: [{ id: "close", label: "닫기" }],
   }).then((result) => {
     if (!result || !result.levelId) return;
     const next = DIFFICULTIES.find((entry) => entry.id === result.levelId);

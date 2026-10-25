@@ -5,6 +5,7 @@ import { createStage, createViews } from "./stage.js";
 import { createCloudView } from "./cloudView.js";
 import { createHud } from "./hud.js";
 import { createControls } from "./controls.js";
+import { createTouchPad } from "../../common/touch-pad.js";
 import { LEVELS, evaluateLevel, levelIndexById } from "./levels.js";
 import {
   FIXED_STEP,
@@ -55,6 +56,44 @@ const controls = createControls({
   },
   restart: () => restart(),
 });
+
+let touchMove = 0;
+createTouchPad(
+  document.getElementById("touch-pad"),
+  [
+    {
+      id: "left",
+      label: "◀",
+      aria: "왼쪽으로 이동",
+      onPress: () => {
+        touchMove = -1;
+      },
+      onRelease: () => {
+        touchMove = 0;
+      },
+    },
+    {
+      id: "jump",
+      label: "점프",
+      aria: "점프",
+      onPress: () => {
+        state.jumpQueued = true;
+      },
+    },
+    {
+      id: "right",
+      label: "▶",
+      aria: "오른쪽으로 이동",
+      onPress: () => {
+        touchMove = 1;
+      },
+      onRelease: () => {
+        touchMove = 0;
+      },
+    },
+  ],
+  { className: "m31-touch-row", label: "구름 점프 조작" },
+);
 
 function progressRatio() {
   const span = state.level.goal.x - state.level.start.x;
@@ -197,7 +236,7 @@ function updatePhysics(delta) {
   while (state.accumulator >= FIXED_STEP) {
     const result = stepPlayer(state.player, {
       dt: FIXED_STEP,
-      input: { move: controls.move, jump: state.jumpQueued },
+      input: { move: Math.max(-1, Math.min(1, controls.move + touchMove)), jump: state.jumpQueued },
       platforms: state.level.platforms,
     });
     state.player = result.player;

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import {
   clearGame,
@@ -148,6 +149,23 @@ describe("진행 관리", () => {
     expect(progress.isUnlocked("two")).toBe(false);
   });
 
+  it("첫 bestTime 기록도 개선으로 본다", () => {
+    const progress = createProgress("demo", { levels });
+    const result = progress.record("one", { stars: 0, score: 0, timeMs: 4200 });
+    expect(result.improved).toBe(true);
+    expect(progress.levelState("one").bestTimeMs).toBe(4200);
+  });
+
+  it("clearAll은 메모리와 저장소를 함께 비운다", () => {
+    const progress = createProgress("demo", { levels });
+    progress.record("one", { stars: 3, score: 700 });
+    progress.clearAll();
+    expect(progress.levelState("one").stars).toBe(0);
+    expect(progress.isUnlocked("one")).toBe(true);
+    expect(progress.isUnlocked("two")).toBe(false);
+    expect(createProgress("demo", { levels }).levelState("one").stars).toBe(0);
+  });
+
   it("별점 계산이 경계값에서 맞는다", () => {
     expect(starsFor({ accuracy: 1, used: 1, par: 1, timeRatio: 1 })).toBe(3);
     expect(starsFor({ accuracy: 0.85, used: 2, par: 1, timeRatio: 1 })).toBe(2);
@@ -171,6 +189,7 @@ describe("공통 화면", () => {
     });
     expect(panel.textContent).toContain("정육면체 완성");
     expect(panel.querySelectorAll(".m31-star.is-on")).toHaveLength(2);
+    expect(panel.querySelector(".m31-stars").getAttribute("aria-label")).toBe("별 2개 / 3개");
     expect(panel.textContent).toContain("1200");
     expect(panel.textContent).toContain("1500");
     expect(panel.textContent).toContain("남은 블록");

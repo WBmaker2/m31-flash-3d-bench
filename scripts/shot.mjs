@@ -49,6 +49,7 @@ function serve(dir) {
 }
 
 import { STEPS } from "./steps.mjs";
+import { GAME_IDS } from "./games.mjs";
 async function diffRatio(first, second) {
   const a = PNG.sync.read(await readFile(first));
   const b = PNG.sync.read(await readFile(second));
@@ -61,7 +62,7 @@ async function diffRatio(first, second) {
 const target = process.argv[2] ?? "zoo";
 const isLanding = target === "landing";
 if (!existsSync(path.join(ROOT, target)) && !isLanding) {
-  console.error(`알 수 없는 대상: ${target} (zoo|molecule|defense|shapes|ballistics|robot|maze|flock|sculpt|gears|paint|dice|balance|landing)`);
+  console.error(`알 수 없는 대상: ${target} (${GAME_IDS.join("|")}|landing)`);
   process.exit(2);
 }
 
@@ -122,7 +123,20 @@ if (isLanding) {
     }
   }
 
-  await page.getByRole("button", { name: "PLAY" }).first().click();
+  const progressPanel = await page.evaluate(() => ({
+    items: document.querySelectorAll("#progress-grid .progress-item").length,
+    hasReset: Boolean(document.getElementById("progress-reset")),
+    hasResume: Boolean(document.getElementById("progress-resume")),
+    summary: document.getElementById("progress-summary")?.textContent?.trim() ?? "",
+  }));
+  if (progressPanel.items !== links.length) {
+    failures.push(`진행 대시보드 항목이 ${progressPanel.items}개입니다. ${links.length}개를 기대했습니다.`);
+  }
+  if (!progressPanel.hasReset) failures.push("진행 전체 초기화 버튼이 없습니다.");
+  if (!progressPanel.hasResume) failures.push("이어서 하기 버튼이 없습니다.");
+  if (!progressPanel.summary) failures.push("진행 요약 문구가 비어 있습니다.");
+
+  await page.locator(".play").first().click();
   await page.waitForTimeout(1500);
   const dialogOpen = await page.evaluate(() => document.getElementById("player").open);
   if (!dialogOpen) failures.push("모달이 열리지 않았습니다.");
@@ -169,6 +183,30 @@ if (isLanding) {
 
 await page.keyboard.press("Escape").catch(() => {});
 await page.waitForTimeout(300);
+
+if (target === "defense" || target === "molecule") {
+  const buttonName = target === "defense" ? "난이도" : "레벨";
+  await page.getByRole("button", { name: buttonName, exact: true }).click();
+  await page.waitForTimeout(250);
+  const dialogInfo = await page.evaluate(() => {
+    const dialog = document.querySelector("dialog[open]");
+    if (!dialog) return null;
+    return {
+      background: getComputedStyle(dialog).backgroundColor,
+      labelledBy: dialog.getAttribute("aria-labelledby"),
+    };
+  });
+  if (!dialogInfo) {
+    failures.push("공용 레벨 팝업이 열리지 않았습니다.");
+  } else {
+    if (dialogInfo.background === "rgb(255, 255, 255)" || dialogInfo.background === "rgba(0, 0, 0, 0)") {
+      failures.push(`공용 레벨 팝업에 공용 스타일이 적용되지 않았습니다 (${dialogInfo.background}).`);
+    }
+    if (!dialogInfo.labelledBy) failures.push("공용 레벨 팝업에 aria-labelledby 가 없습니다.");
+  }
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+}
 
 const viewFiles = {};
 for (const view of isLanding ? [] : VIEWS) {
@@ -259,9 +297,46 @@ if (mobileLayout.offscreen.length > 0) {
   failures.push(`모바일(390x844) 화면 밖 패널: ${mobileLayout.offscreen.join(", ")}`);
 }
 
+if (["cloud", "maze", "flock"].includes(target)) {
+  const touch = await page.evaluate(() => {
+    const pad = document.getElementById("touch-pad");
+    const buttons = pad ? [...pad.querySelectorAll("button")] : [];
+    const visible = buttons.filter((button) => {
+      const rect = button.getBoundingClientRect();
+      const style = getComputedStyle(button);
+      return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+    });
+    return { buttons: buttons.length, visible: visible.length };
+  });
+  if (touch.buttons < 3 || touch.visible < 3) {
+    failures.push(`모바일 터치 조작 버튼이 부족합니다 (${touch.visible}/${touch.buttons}).`);
+  }
+}
+
 await shot("05-모바일");
 await page.setViewportSize({ width: 1280, height: 800 });
 await page.waitForTimeout(400);
+
+if (target === "balance") {
+  await page.evaluate(() => {
+    window.__gameApi?.showEnding?.();
+  });
+  await page.waitForTimeout(300);
+  const ending = await page.evaluate(() => {
+    const dialog = document.querySelector("dialog[open]");
+    const panel = dialog?.querySelector(".m31-panel-ending") ?? null;
+    const background = dialog ? getComputedStyle(dialog).backgroundColor : "";
+    return { open: Boolean(dialog), panel: Boolean(panel), background };
+  });
+  if (!ending.open || !ending.panel) {
+    failures.push("엔딩 화면이 열리지 않았습니다.");
+  } else if (ending.background === "rgba(0, 0, 0, 0)" || ending.background === "rgb(255, 255, 255)") {
+    failures.push(`엔딩 팝업에 공용 스타일이 적용되지 않았습니다 (${ending.background}).`);
+  }
+  await shot("06-엔딩");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+}
 
 const base = viewFiles.default;
 if (base) {

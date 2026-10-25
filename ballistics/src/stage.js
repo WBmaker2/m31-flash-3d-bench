@@ -1,6 +1,7 @@
 // 렌더러 · 조명 · 카메라. 석양 사격장 분위기.
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createLoopRuntime } from "../../common/engine/loop.js";
 
 export const VIEWS = {
   default: { position: [-8.5, 6, -9], target: [0, 2, 10] },
@@ -139,60 +140,13 @@ export function createStage(canvas) {
   lane.position.set(0, 0.015, 15);
   scene.add(lane);
 
-  function resize() {
-    const width = canvas.clientWidth || window.innerWidth;
-    const height = canvas.clientHeight || window.innerHeight;
-    renderer.setSize(width, height, false);
-    camera.aspect = width / Math.max(height, 1);
-    camera.updateProjectionMatrix();
-  }
-  resize();
-  window.addEventListener("resize", resize);
-
-  const timer = new THREE.Timer();
-  const STEP = 1 / 60;
-  const still = new URLSearchParams(window.location.search).has("still");
-
-  function start(update) {
-    let accumulator = 0;
-    let elapsed = 0;
-    renderer.setAnimationLoop(() => {
-      if (still) {
-        renderer.render(scene, camera);
-        if (window.__gameReady !== true) window.__gameReady = true;
-        return;
-      }
-      timer.update();
-      const delta = Math.min(timer.getDelta(), 0.1);
-      accumulator = Math.min(accumulator + delta, 0.25);
-      while (accumulator >= STEP) {
-        elapsed += STEP;
-        update(STEP, elapsed);
-        accumulator -= STEP;
-      }
-      controls.update();
-      renderer.render(scene, camera);
-      if (window.__gameReady !== true) window.__gameReady = true;
-    });
-  }
-
-  function dispose() {
-    renderer.setAnimationLoop(null);
-    window.removeEventListener("resize", resize);
-    scene.traverse((object) => {
-      if (object.geometry) object.geometry.dispose();
-      const material = object.material;
-      if (!material) return;
-      const list = Array.isArray(material) ? material : [material];
-      for (const entry of list) {
-        if (entry.map) entry.map.dispose();
-        entry.dispose();
-      }
-    });
-    renderer.dispose();
-  }
-
-  return { renderer, scene, camera, controls, start, dispose };
+  return {
+    renderer,
+    scene,
+    camera,
+    controls,
+    ...createLoopRuntime({ canvas, renderer, scene, camera, controls }),
+  };
 }
 
 export function createPicker(canvas, camera) {

@@ -32,6 +32,12 @@ export function createProgress(gameId, options = {}) {
     saveState(gameId, storageKey, state);
   }
 
+  function resetState() {
+    levels.forEach((level, index) => {
+      state[level.id] = { ...emptyLevelState(), unlocked: index === 0 };
+    });
+  }
+
   return {
     levels,
     state,
@@ -70,15 +76,13 @@ export function createProgress(gameId, options = {}) {
       const before = { ...current };
       if (stars > current.stars) current.stars = stars;
       if (score > current.bestScore) current.bestScore = score;
-      if (timeMs !== null && (current.bestTimeMs === null || timeMs < current.bestTimeMs)) {
-        current.bestTimeMs = timeMs;
-      }
+      const improvedTime =
+        timeMs !== null && (before.bestTimeMs === null || timeMs < before.bestTimeMs);
+      if (improvedTime) current.bestTimeMs = timeMs;
       current.attempts += 1;
 
       const improved =
-        current.stars > before.stars ||
-        current.bestScore > before.bestScore ||
-        (current.bestTimeMs !== null && current.bestTimeMs < before.bestTimeMs);
+        current.stars > before.stars || current.bestScore > before.bestScore || improvedTime;
 
       const unlocked = [];
       const index = levels.findIndex((level) => level.id === levelId);
@@ -94,13 +98,11 @@ export function createProgress(gameId, options = {}) {
       return { improved, unlocked };
     },
     reset() {
-      for (const level of levels) {
-        const index = levels.findIndex((entry) => entry.id === level.id);
-        state[level.id] = { ...emptyLevelState(), unlocked: index === 0 };
-      }
+      resetState();
       persist();
     },
     clearAll() {
+      resetState();
       clearGame(gameId);
     },
   };

@@ -225,7 +225,7 @@
         border-color: rgba(255, 184, 0, 0.5);
       }
 
-      @media (max-width: 760px) {
+      @media (max-width: 900px) {
         .panel-head {
           top: 10px;
           left: 10px;
@@ -272,7 +272,8 @@
         .status {
           left: 10px;
           right: 10px;
-          bottom: 62px;
+          top: 118px;
+          bottom: auto;
           font-size: 11.5px;
           padding: 8px 12px;
           max-width: none;
@@ -314,7 +315,7 @@
       role="img"
       aria-label="3D 미로 탈출 3D 화면. 1인칭으로 미로를 걸어 열쇠를 모으고 출구로 나가는 게임입니다."
     ></canvas>
-    <a class="back-link" href="../index.html">&#8592; GAMES</a>
+    <a class="back-link" href="../index.html" target="_top">&#8592; GAMES</a>
 
     <section class="panel panel-head">
       <p class="kicker">미로 탈출</p>
@@ -339,9 +340,10 @@
       <canvas id="minimap" width="168" height="168" aria-label="탐색한 미로 지도"></canvas>
     </section>
 
-    <p class="panel status" id="status-line">방향키로 움직이고 마우스로 둘러보세요.</p>
+    <p class="panel status" id="status-line" aria-live="polite">방향키로 움직이고 마우스로 둘러보세요.</p>
 
     <nav class="panel panel-bar">
+      <div class="group m31-touch-host" id="touch-pad"></div>
       <button id="btn-retry" class="btn-primary btn-pulse" type="button">다시 시도 (R)</button>
       <button id="btn-levels" type="button">레벨 선택</button>
     </nav>

@@ -1,6 +1,7 @@
 # 다음 3D 게임 아이디어 — 초등학생 대상
 
 - 작성일: 2026-10-24
+- 갱신: 2026-10-25 — 이 문서는 후보 9종을 비교하던 시점의 기록입니다. 현재 저장소에는 18종이 있습니다.
 - 목적: 10번째 이후 게임 후보를 비교하고, 하나를 고른다
 - 전제: 이 저장소는 이미 9종(`zoo` `molecule` `defense` `shapes` `ballistics` `robot` `maze` `flock` `sculpt`)이 있다.
   새 게임은 ① 기존 9종과 **검증 축이 겹치지 않을 것** ② **수치로 판정 가능할 것**
@@ -178,3 +179,31 @@ common/parts/            ← 3D 공용 부품 계층(신규)
 | `README.md` | 표에 행 추가 + `## 내역` 기록 |
 | `<game>/README.md` | 게임 소개 + 수치 계약 |
 | 검증 | `npm test` · `npm run qa` · `npm run qa:visual` · `npm run qa:sync` |
+
+## 8. 18종 이후 후보 (2026-10-25)
+
+게임 수를 더 늘리기보다 **기존 18종과 겹치지 않는 검증 축**을 우선합니다.
+
+| 후보 | 새 검증 축 | 교육 연결 | 위험 | 재사용 |
+|---|---|---|---|---|
+| 3D 대칭 공방 | 점군 대칭 · 회전/반사 합성 | 도형의 대칭, 군론 맛보기 | 중 | `sculpt` SDF, `shapes` 회전군 |
+| 3D 그림자 극장 | 광원 → 직교 투영 · 실루엣 일치 | 빛과 그림자, 투영 | 중 | `sculpt` 실루엣 IoU, `laser` 광선 |
+| 3D 구조 다리 | 정적 평형 · 부재력 · 지지 조건 | 힘의 합, 구조 | 중상 | `balance` 모멘트 |
+| 3D 회전 퍼즐 | 순열 · 패리티 · 회전 합성 | 공간 추론, 규칙 찾기 | 중 | `shapes` 회전, `net` 면 대응 |
+
+**추천** — 19번째는 "3D 대칭 공방"이 가장 안전합니다. 기존 SDF·회전군 부품을 재사용하면서
+"대칭 연산을 수치로 판정한다"는 새 축을 추가할 수 있습니다. 단, 새 게임을 만들기 전에
+`common/engine/stage.js`와 터치·접근성 계층을 먼저 안정화하는 것이 좋습니다.
+
+## 9. 새 게임 체크리스트 (2026-10-25 갱신)
+
+| 대상 | 작업 |
+|---|---|
+| `scripts/games.mjs` | 게임 id·제목·능력 축 등록 (단일 목록) |
+| `docs/PLAN-<game>.md` | 수치 계약 · 검증 3층 · 통합 체크리스트 |
+| `<game>/` | `index.html` · `src/main.js` · 순수 로직 · 테스트 · `invariants.js` |
+| `scripts/steps.mjs` | `STEPS.<game>` · `CARD_SETUP.<game>` |
+| `index.html` | 카드 추가, 랜딩 수치 갱신, `PLAY` aria-label |
+| `docs/checks.json` · `docs/baseline/` · `docs/cards/` | `npm run qa:cards` 로 재생성 |
+| 문서 | `README.md` 표·내역, `docs/BENCHMARK.md` 능력 축, `docs/RUNS.md` 기록 |
+| 검증 | `npm test` · `npm run qa` · `npm run qa:ui` · `npm run qa:visual` · `npm run qa:sync` |

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createLoopRuntime } from "../../common/engine/loop.js";
 
 export function createStage(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -46,54 +47,13 @@ export function createStage(canvas) {
   fill.position.set(-9, 6, -10);
   scene.add(fill);
 
-  function resize() {
-    const width = canvas.clientWidth || window.innerWidth;
-    const height = canvas.clientHeight || window.innerHeight;
-    renderer.setSize(width, height, false);
-    camera.aspect = width / Math.max(height, 1);
-    camera.updateProjectionMatrix();
-  }
-  resize();
-  window.addEventListener("resize", resize);
-
-  const timer = new THREE.Timer();
-  const STEP = 1 / 60;
-
-  function start(update) {
-    let accumulator = 0;
-    let elapsed = 0;
-    renderer.setAnimationLoop(() => {
-      timer.update();
-      const delta = Math.min(timer.getDelta(), 0.1);
-      accumulator = Math.min(accumulator + delta, 0.25);
-      while (accumulator >= STEP) {
-        elapsed += STEP;
-        update(STEP, elapsed);
-        accumulator -= STEP;
-      }
-      controls.update();
-      renderer.render(scene, camera);
-      if (window.__gameReady !== true) window.__gameReady = true;
-    });
-  }
-
-  function dispose() {
-    renderer.setAnimationLoop(null);
-    window.removeEventListener("resize", resize);
-    scene.traverse((object) => {
-      if (object.geometry) object.geometry.dispose();
-      const material = object.material;
-      if (!material) return;
-      const list = Array.isArray(material) ? material : [material];
-      for (const entry of list) {
-        if (entry.map) entry.map.dispose();
-        entry.dispose();
-      }
-    });
-    renderer.dispose();
-  }
-
-  return { renderer, scene, camera, controls, start, dispose };
+  return {
+    renderer,
+    scene,
+    camera,
+    controls,
+    ...createLoopRuntime({ canvas, renderer, scene, camera, controls }),
+  };
 }
 
 export function createPicker(canvas, camera) {

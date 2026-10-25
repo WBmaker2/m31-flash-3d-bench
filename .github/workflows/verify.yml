@@ -31,6 +31,9 @@ jobs:
       - name: 단위 테스트
         run: npm test
 
+      - name: UI 계약 검사 (공용 스타일 · 백링크 · 터치 영역 · 랜딩 수치)
+        run: npm run qa:ui
+
       - name: Playwright Chromium 설치
         run: npx playwright install --with-deps chromium
 

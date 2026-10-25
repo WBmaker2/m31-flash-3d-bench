@@ -7,9 +7,12 @@ function element(tag, className, text) {
 
 function starRow(count) {
   const row = element("div", "m31-stars");
+  row.setAttribute("role", "img");
+  row.setAttribute("aria-label", `별 ${count}개 / 3개`);
   for (let i = 0; i < 3; i += 1) {
     const star = element("span", i < count ? "m31-star is-on" : "m31-star");
     star.textContent = "★";
+    star.setAttribute("aria-hidden", "true");
     row.append(star);
   }
   return row;
@@ -60,6 +63,8 @@ export function buildLevelPanel(options = {}) {
   panel.append(element("h2", "m31-title", options.title ?? "레벨 선택"));
 
   const list = element("div", "m31-levels");
+  list.setAttribute("role", "group");
+  list.setAttribute("aria-label", "레벨 목록");
   // 스크롤 영역이 먼저 포커스를 잡지 않게 한다.
   list.tabIndex = -1;
   options.levels.forEach((level, index) => {
@@ -120,10 +125,13 @@ export function buildEndingPanel(options = {}) {
 
   if (summary?.levels?.length) {
     const list = element("div", "m31-ending-list");
+    list.setAttribute("role", "list");
+    list.setAttribute("aria-label", "단계별 성적");
     // 스크롤 영역이 먼저 포커스를 잡지 않게 한다.
     list.tabIndex = -1;
     for (const entry of summary.levels) {
       const row = element("div", "m31-ending-row");
+      row.setAttribute("role", "listitem");
       row.append(element("span", "m31-ending-index", String(entry.index).padStart(2, "0")));
       row.append(element("span", "m31-ending-label", entry.label));
       const stars = starRow(entry.stars);
@@ -152,19 +160,34 @@ export function buildEndingPanel(options = {}) {
 
 function openPanel(panel, options = {}) {
   return new Promise((resolve) => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = document.createElement("dialog");
     dialog.className = options.wide ? "m31-dialog m31-dialog-wide" : "m31-dialog";
     dialog.append(panel);
+
+    const title = panel.querySelector(".m31-title");
+    if (title) {
+      title.id = title.id || "m31-dialog-title";
+      dialog.setAttribute("aria-labelledby", title.id);
+    }
+
     document.body.append(dialog);
 
+    let settled = false;
     const finish = (value) => {
+      if (settled) return;
+      settled = true;
       if (dialog.open) dialog.close();
       dialog.remove();
+      previousFocus?.focus?.();
       resolve(value);
     };
 
     dialog.addEventListener("close", () => {
+      if (settled) return;
+      settled = true;
       dialog.remove();
+      previousFocus?.focus?.();
       resolve(null);
     });
     dialog.addEventListener("click", (event) => {
@@ -190,7 +213,13 @@ function openPanel(panel, options = {}) {
 
     // 가장 먼저 눌러야 하는 버튼에 포커스를 준다.
     const primary = dialog.querySelector(".m31-btn-primary");
+    const firstButton = dialog.querySelector("button");
     if (primary instanceof HTMLElement) primary.focus();
+    else if (firstButton instanceof HTMLElement) firstButton.focus();
+    else {
+      dialog.tabIndex = -1;
+      dialog.focus();
+    }
   });
 }
 
@@ -219,6 +248,9 @@ export function showToast(message, tone = "info") {
     toast.id = "m31-toast";
     document.body.append(toast);
   }
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.setAttribute("aria-atomic", "true");
   toast.textContent = message;
   toast.classList.toggle("is-bad", tone === "bad");
   toast.classList.add("is-open");

@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>3D 타워 디펜스 — three.js</title>
+    <link rel="stylesheet" href="../common/styles.css" />
     <style>
       :root {
         --bg: #060d14;
@@ -379,7 +380,7 @@
     </style>
   </head>
   <body>
-    <a class="back-link" href="../index.html">&#8592; GAMES</a>
+    <a class="back-link" href="../index.html" target="_top">&#8592; GAMES</a>
     <canvas id="scene" role="img" aria-label="3D 타워 디펜스 3D 화면. 격자 보드 위 길에 타워를 세워 적을 막습니다. 아래 버튼으로 타워 종류를 고르고 다음 웨이브를 시작할 수 있습니다."></canvas>
 
     <section class="panel panel-title">
@@ -414,13 +415,13 @@
       <button id="btn-reset" type="button">다시 시작</button>
     </nav>
 
-    <section class="panel panel-info" id="info">
+    <section class="panel panel-info" id="info" aria-live="polite">
       <span id="info-text"></span>
       <button id="btn-sell" type="button">판매</button>
     </section>
 
     <p class="hint">드래그: 시점 회전 · 휠: 확대<br />타워 클릭: 선택 · 셀 클릭: 설치</p>
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script>
       (async () => {

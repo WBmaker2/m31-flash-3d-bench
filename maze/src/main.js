@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { createStage, createViews } from "./stage.js";
 import { createMazeView } from "./mazeView.js";
 import { createHud } from "./hud.js";
+import { createDirectionPad } from "../../common/touch-pad.js";
 import { LEVELS, evaluateSteps, scoreForSteps } from "./levels.js";
 import {
   CELL_SIZE_M,
@@ -74,6 +75,17 @@ const state = {
 const hud = createHud({
   onRetry: () => loadLevel(state.levelIndex),
   onLevels: openLevels,
+});
+
+const TOUCH_DIRECTION = { up: 0, right: 1, down: 2, left: 3 };
+createDirectionPad(document.getElementById("touch-pad"), {
+  label: "미로 이동",
+  onDirection: (id) => {
+    const direction = TOUCH_DIRECTION[id];
+    if (direction === undefined) return;
+    state.desired = direction;
+    state.solving = false;
+  },
 });
 
 function extentOf(maze) {
@@ -387,7 +399,10 @@ window.__gameApi = {
       });
     };
     const player = cellToWorld(state.maze, state.cell);
-    push("player", new THREE.Vector3(player.x, EYE_HEIGHT_M, player.z));
+    const forward = DIRECTION_VECTOR[state.facing] ?? DIRECTION_VECTOR[0];
+    // 1인칭에서는 플레이어가 카메라 위치와 같아 투영이 정의되지 않는다.
+    // 카메라 앞쪽의 점을 대신 투영해 화면 기준 위치를 남긴다.
+    push("player", new THREE.Vector3(player.x + forward.x * 1.2, EYE_HEIGHT_M, player.z + forward.z * 1.2));
     const exit = cellToWorld(state.maze, state.maze.exit);
     push("exit", new THREE.Vector3(exit.x, 1, exit.z));
     for (const key of state.maze.keys) {

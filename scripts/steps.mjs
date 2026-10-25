@@ -44,7 +44,7 @@ export const STEPS = {
     await page.waitForTimeout(300);
     await page.getByRole("button", { name: "찾기 게임" }).click();
     await page.waitForTimeout(500);
-    await shot("06-찾��레벨");
+    await shot("06-찾기-레벨");
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
   },

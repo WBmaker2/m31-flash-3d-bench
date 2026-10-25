@@ -255,6 +255,7 @@
         display: flex;
         flex-direction: column;
         border-right: 1px solid var(--rule);
+        cursor: pointer;
       }
 
       .card:last-child {
@@ -402,6 +403,95 @@
         font-size: 13.5px;
         line-height: 1.8;
         color: var(--ink-dim);
+      }
+
+      /* ---------- 내 진행 ---------- */
+      .progress-panel {
+        border: 1px solid var(--rule);
+        background: var(--surface-2);
+      }
+
+      .progress-summary {
+        margin: 0;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--rule);
+        font-size: 13px;
+        color: var(--ink-dim);
+      }
+
+      .progress-summary b {
+        color: var(--signal);
+        font-weight: 600;
+      }
+
+      .progress-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .progress-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 4px 14px;
+        padding: 14px 20px;
+        border-right: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .progress-item:nth-child(2n) {
+        border-right: 0;
+      }
+
+      .progress-item.is-empty {
+        color: var(--ink-dim);
+      }
+
+      .progress-name {
+        font-size: 13px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .progress-stars {
+        font-size: 12px;
+        color: var(--signal);
+        white-space: nowrap;
+      }
+
+      .progress-meta {
+        grid-column: 1 / -1;
+        font-size: 11.5px;
+        color: var(--ink-dim);
+      }
+
+      .progress-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding: 14px 20px;
+      }
+
+      .progress-actions button {
+        font: inherit;
+        font-size: 12px;
+        color: var(--ink);
+        background: transparent;
+        border: 1px solid var(--rule);
+        padding: 9px 14px;
+        cursor: pointer;
+      }
+
+      .progress-actions button:hover,
+      .progress-actions button:focus-visible {
+        border-color: var(--signal);
+        color: var(--signal);
+        outline: none;
+      }
+
+      .progress-actions button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
       }
 
       /* ---------- 실행 ---------- */
@@ -581,13 +671,17 @@
           padding-right: 0;
         }
         .cards,
-        .layers {
+        .layers,
+        .progress-grid {
           grid-template-columns: 1fr;
         }
         .card,
         .layer {
           border-right: 0;
           border-bottom: 1px solid var(--rule);
+        }
+        .progress-item {
+          border-right: 0;
         }
         .card:last-child,
         .layer:last-child {
@@ -619,6 +713,7 @@
       <div class="wrap topbar-inner">
         <a class="mark" href="#top">M3.1 FLASH <span>/</span> 3D BENCH</a>
         <nav class="nav" aria-label="페이지 이동">
+          <a href="#progress">PROGRESS</a>
           <a href="#games">GAMES</a>
           <a href="#checks">CHECKS</a>
           <a href="#run">RUN</a>
@@ -632,7 +727,7 @@
           <p class="eyebrow"><b>MINIMAX M3.1 FLASH</b> · THREE.JS 0.186.1 · 빌드 단계 없음</p>
           <h1>3D 게임 18종을<br />모델이 직접 만들었습니다</h1>
           <p class="lede">
-            MiniMax M3.1 Flash가 여덟 개의 three.js 게임을 처음부터 끝까지 구현했습니다.
+            MiniMax M3.1 Flash가 18개의 three.js 게임을 처음부터 끝까지 구현했습니다.
             숫자는 <b>단위 테스트</b>가, 화면은 <b>4시점 자동 판정</b>이 확인합니다.
             아래 카드에 적힌 수치는 모두 실제 실행 결과입니다.
           </p>
@@ -646,10 +741,10 @@
           </div>
           <div>
             <dt>단위 테스트</dt>
-            <dd data-check="totals.tests" data-value="613">613개</dd>
+            <dd data-check="totals.tests" data-value="615">615개</dd>
           </div>
           <div>
-            <dt>자동 검사 화면</dt>
+            <dt>카드 이미지</dt>
             <dd data-check="totals.views" data-value="54">54</dd>
           </div>
           <div>
@@ -663,23 +758,42 @@
         </dl>
       </section>
 
-      <section class="wrap section" id="games">
+      <section class="wrap section" id="progress">
         <div class="section-head">
           <span class="index">01</span>
+          <h2>MY PROGRESS</h2>
+          <p>이 브라우저에 저장된 게임별 기록입니다. 로그인 없이 localStorage에 남습니다.</p>
+        </div>
+
+        <div class="progress-panel">
+          <p class="progress-summary" id="progress-summary" aria-live="polite">
+            기록을 읽는 중입니다.
+          </p>
+          <div class="progress-grid" id="progress-grid" role="list" aria-label="게임별 진행 기록"></div>
+          <div class="progress-actions">
+            <button id="progress-resume" type="button" disabled>이어서 하기</button>
+            <button id="progress-reset" type="button">전체 진행 지우기</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="wrap section" id="games">
+        <div class="section-head">
+          <span class="index">02</span>
           <h2>GAMES</h2>
-          <p>카드를 누르면 그 자리에서 바로 플레이합니다. 마우스를 올리면 다른 각도가 차례로 보입니다.</p>
+          <p>카드나 PLAY 버튼을 누르면 그 자리에서 바로 플레이합니다. 마우스를 올리면 다른 각도가 차례로 보입니다.</p>
         </div>
 
         <div class="cards">
           <article class="card" data-frames data-game="zoo">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/zoo-card.png"
                 alt="폴리곤 동물원 — 저폴리 판다와 고양이가 정원을 걷는 화면"
               />
-              <img class="card-frame" src="docs/cards/zoo-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/zoo-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/zoo-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/zoo-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>01</b> 절차적 모델링</p>
@@ -712,13 +826,13 @@
 
           <article class="card" data-frames data-game="molecule">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/molecule-card.png"
                 alt="3D 분자 빌더 — 굽은형 물 분자의 결합각이 보이는 화면"
               />
-              <img class="card-frame" src="docs/cards/molecule-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/molecule-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/molecule-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/molecule-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>02</b> 화학 교육</p>
@@ -751,13 +865,13 @@
 
           <article class="card" data-frames data-game="defense">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/defense-card.png"
                 alt="3D 타워 디펜스 — 격자 보드 위에서 적이 길을 따라 오는 화면"
               />
-              <img class="card-frame" src="docs/cards/defense-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/defense-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/defense-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/defense-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>03</b> 실시간 전략</p>
@@ -790,13 +904,13 @@
 
           <article class="card" data-frames data-game="shapes">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/shapes-card.png"
                 alt="3D 도형 조립실 — 반투명한 목표 모양을 블록으로 채우는 화면"
               />
-              <img class="card-frame" src="docs/cards/shapes-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/shapes-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/shapes-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/shapes-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>04</b> 공간 지각력</p>
@@ -829,13 +943,13 @@
 
           <article class="card" data-frames data-game="ballistics">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/ballistics-card.png"
                 alt="3D 탄도 타워 — 석양 사격장에서 포신을 조준해 표적 상자를 무너뜨리는 화면"
               />
-              <img class="card-frame" src="docs/cards/ballistics-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/ballistics-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/ballistics-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/ballistics-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>05</b> 탄도 시뮬레이션</p>
@@ -868,13 +982,13 @@
 
           <article class="card" data-frames data-game="robot">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/robot-card.png"
                 alt="3D 로봇 팔 조립실 — 작업대 위 표적 판에 블록을 옮겨 놓는 로봇 팔 화면"
               />
-              <img class="card-frame" src="docs/cards/robot-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/robot-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/robot-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/robot-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>06</b> 역기구학</p>
@@ -907,13 +1021,13 @@
 
           <article class="card" data-frames data-game="maze">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/maze-card.png"
                 alt="3D 미로 탈출 — 손전 밝기로 어둠 속 미로를 걸어 열쇠를 모으는 화면"
               />
-              <img class="card-frame" src="docs/cards/maze-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/maze-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/maze-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/maze-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>07</b> 공간 탐색</p>
@@ -946,13 +1060,13 @@
 
           <article class="card" data-frames data-game="flock">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/flock-card.png"
                 alt="3D 무리 유도 — 새 떼가 어둠 속 링 게이트를 향해 날아가는 화면"
               />
-              <img class="card-frame" src="docs/cards/flock-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/flock-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/flock-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/flock-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>08</b> 집단 행동</p>
@@ -985,13 +1099,13 @@
 
           <article class="card" data-frames data-game="sculpt">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/sculpt-card.png"
                 alt="3D 형태 공방 — 작업대 위 반투명한 목표 형태와 크림색 조각이 겹쳐 보이는 화면"
               />
-              <img class="card-frame" src="docs/cards/sculpt-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/sculpt-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/sculpt-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/sculpt-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>09</b> 암시적 곡면</p>
@@ -1024,13 +1138,13 @@
 
           <article class="card" data-frames data-game="gears">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/gears-card.png"
                 alt="3D 기어 공방 — 나무 판 위에서 톱니바퀴들이 맞물려 돌아가는 화면"
               />
-              <img class="card-frame" src="docs/cards/gears-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/gears-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/gears-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/gears-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>10</b> 회전 동역학</p>
@@ -1063,13 +1177,13 @@
 
           <article class="card" data-frames data-game="paint">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/paint-card.png"
                 alt="3D 물감칠 공방 — 나무 인형을 목표 그림 색으로 칠한 화면"
               />
-              <img class="card-frame" src="docs/cards/paint-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/paint-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/paint-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/paint-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>11</b> 표면 셀 그래프</p>
@@ -1102,13 +1216,13 @@
 
           <article class="card" data-frames data-game="dice">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/dice-card.png"
                 alt="3D 주사위 놀이 — 뱀과 사다리 보드 위에서 주사위가 굴러지는 화면"
               />
-              <img class="card-frame" src="docs/cards/dice-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/dice-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/dice-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/dice-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>12</b> 시드 난수 · 턴 상태</p>
@@ -1141,13 +1255,13 @@
 
           <article class="card" data-frames data-game="draw">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/draw-card.png"
                 alt="3D 그림 그리기 — 픽셀 그림을 큐브로 만드는 화면"
               />
-              <img class="card-frame" src="docs/cards/draw-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/draw-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/draw-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/draw-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>18</b> 자유 배치 · 스냅샷 비교</p>
@@ -1179,13 +1293,13 @@
 
           <article class="card" data-frames data-game="rail">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/rail-card.png"
                 alt="3D 기차 레일 — 선로를 놓고 기차가 달려가는 화면"
               />
-              <img class="card-frame" src="docs/cards/rail-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/rail-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/rail-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/rail-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>17</b> 조각 연결 · 경로</p>
@@ -1217,13 +1331,13 @@
 
           <article class="card" data-frames data-game="net">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/net-card.png"
                 alt="3D 전개도 맞추기 — 목표 상자와 펼친 전개도 보기 4개가 있는 화면"
               />
-              <img class="card-frame" src="docs/cards/net-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/net-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/net-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/net-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>16</b> 전개도 접기</p>
@@ -1255,13 +1369,13 @@
 
           <article class="card" data-frames data-game="laser">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/laser-card.png"
                 alt="3D 빛 거울 공방 — 레이저 빛이 거울에서 꺾이는 화면"
               />
-              <img class="card-frame" src="docs/cards/laser-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/laser-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/laser-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/laser-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>15</b> 기하 광학</p>
@@ -1293,13 +1407,13 @@
 
           <article class="card" data-frames data-game="cloud">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/cloud-card.png"
                 alt="3D 구름 점프 — 구름 사이를 뛰어 동전을 모으는 화면"
               />
-              <img class="card-frame" src="docs/cards/cloud-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/cloud-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/cloud-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/cloud-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>14</b> 캐릭터 물리</p>
@@ -1331,13 +1445,13 @@
 
           <article class="card" data-frames data-game="balance">
             <div class="card-media">
-              <img
+              <img loading="lazy" decoding="async"
                 class="card-frame is-active"
                 src="docs/cards/balance-card.png"
                 alt="3D 균형저울 — 시소매 위에 추를 올려 수평으로 맞추는 화면"
               />
-              <img class="card-frame" src="docs/cards/balance-side.png" alt="" />
-              <img class="card-frame" src="docs/cards/balance-top.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/balance-side.png" alt="" />
+              <img loading="lazy" decoding="async" class="card-frame" src="docs/cards/balance-top.png" alt="" />
             </div>
             <div class="card-body">
               <p class="card-index"><b>13</b> 역학 평형</p>
@@ -1371,7 +1485,7 @@
 
       <section class="wrap section" id="checks">
         <div class="section-head">
-          <span class="index">02</span>
+          <span class="index">03</span>
           <h2>CHECKS</h2>
           <p>3D는 값이 맞는 것과 화면에 보이는 것이 다릅니다. 그래서 검사를 세 층으로 나눴습니다.</p>
         </div>
@@ -1382,7 +1496,7 @@
             <h3>순수 계산 검사</h3>
             <p>
               브라우저 없이 숫자로 확인합니다. 분자 결합각이 104.5° ± 0.5°인지, 동물이
-              겹치지 않는지, 적이 길을 따라 잘 움직이는지, 포신 궤적이 계산과 맞는지, 로봇 팔이 목표에 정확히 닿는지, 미로의 최적 경로가 실제로 최단인지, 무리의 행동 규칙이 수치로 맞는지를, 조각 표면의 부피가 해석해와 맞는지를, 기어비와 톱니 위상이 1e-9 안에서 맞는지를, 색칠한 면이 목표 그림과 얼마나 같은지를, 주사위 자세에서 읽은 면이 보고 있는 값과 맞는지를, 저울이 수평일 때 모멘트 합이 0 인지, 빠른 낙하에도 구름을 뚫지 않는지를, 빛이 반사될 때 입사각과 반사각이 같은지를, 전개도가 6면으로 겹치지 않고 접히는지, 선로가 실제로 이어지는지, 놓은 그림이 목표와 얼마나 같은지를 613개 테스트가 검사합니다.
+              겹치지 않는지, 적이 길을 따라 잘 움직이는지, 포신 궤적이 계산과 맞는지, 로봇 팔이 목표에 정확히 닿는지, 미로의 최적 경로가 실제로 최단인지, 무리의 행동 규칙이 수치로 맞는지를, 조각 표면의 부피가 해석해와 맞는지를, 기어비와 톱니 위상이 1e-9 안에서 맞는지를, 색칠한 면이 목표 그림과 얼마나 같은지를, 주사위 자세에서 읽은 면이 보고 있는 값과 맞는지를, 저울이 수평일 때 모멘트 합이 0 인지, 빠른 낙하에도 구름을 뚫지 않는지를, 빛이 반사될 때 입사각과 반사각이 같은지를, 전개도가 6면으로 겹치지 않고 접히는지, 선로가 실제로 이어지는지, 놓은 그림이 목표와 얼마나 같은지를 615개 테스트가 검사합니다.
             </p>
           </div>
           <div class="layer">
@@ -1406,20 +1520,20 @@
 
       <section class="wrap section" id="run">
         <div class="section-head">
-          <span class="index">03</span>
+          <span class="index">04</span>
           <h2>RUN</h2>
           <p>빌드 단계가 없습니다. 정적 서버만 띄우면 바로 실행됩니다.</p>
         </div>
 
         <div class="run-grid">
-          <pre class="code"><div><span class="prompt">$</span><span class="cmd">cd minimax-m31-test</span></div><div><span class="prompt">$</span><span class="cmd">python3 -m http.server 5174</span></div><div><span class="note"># 브라우저에서 http://localhost:5174/</span></div></pre>
+          <pre class="code"><div><span class="prompt">$</span><span class="cmd">cd m31-flash-3d-bench</span></div><div><span class="prompt">$</span><span class="cmd">python3 -m http.server 5174</span></div><div><span class="note"># 브라우저에서 http://localhost:5174/</span></div></pre>
           <div class="run-side">
             <h3>검사 다시 돌리기</h3>
             <p>
               카드 이미지와 검사 수치를 다시 생성합니다. 랜딩에 적힌 수치가 실제 결과와 어긋나면
               랜딩 검사가 실패합니다.
             </p>
-            <button class="copy" type="button" data-copy="node minimax-m31-test/scripts/card-shots.mjs">
+            <button class="copy" type="button" data-copy="npm run qa:cards">
               명령 복사
             </button>
           </div>
@@ -1430,11 +1544,11 @@
     <footer>
       <div class="wrap foot-inner">
         <span>MiniMax M3.1 Flash (free) · three.js 0.186.1 · 정적 파일만으로 구성</span>
-        <span>단위 테스트 613개 · 자동 검사 화면 54장</span>
+        <span>단위 테스트 615개 · 카드 이미지 54장</span>
       </div>
     </footer>
 
-    <dialog id="player" aria-label="게임 플레이">
+    <dialog id="player" aria-labelledby="player-name">
       <div class="player-bar">
         <span class="name" id="player-name"></span>
         <span class="spacer"></span>
@@ -1451,6 +1565,7 @@
       const external = document.getElementById("player-external");
 
       for (const button of document.querySelectorAll(".play")) {
+        button.setAttribute("aria-label", `${button.dataset.title} 플레이`);
         button.addEventListener("click", () => {
           const href = button.dataset.href;
           const title = button.dataset.title;
@@ -1497,9 +1612,14 @@
         card.addEventListener("mouseleave", stop);
         card.addEventListener("focusin", start);
         card.addEventListener("focusout", stop);
+        card.addEventListener("click", (event) => {
+          if (event.target.closest("a, button")) return;
+          card.querySelector(".play")?.click();
+        });
       }
 
       for (const button of document.querySelectorAll(".copy")) {
+        button.setAttribute("aria-live", "polite");
         button.addEventListener("click", async () => {
           const text = button.dataset.copy;
           try {
@@ -1513,6 +1633,111 @@
           }, 1800);
         });
       }
+
+      const PROGRESS_PREFIX = "m31-3d-bench:";
+
+      function readGameProgress(game) {
+        try {
+          const raw = window.localStorage.getItem(`${PROGRESS_PREFIX}${game}:progress`);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed || parsed.v !== 1 || !parsed.data || typeof parsed.data !== "object") return null;
+          return parsed.data;
+        } catch {
+          return null;
+        }
+      }
+
+      function summarizeGame(game) {
+        const data = readGameProgress(game);
+        if (!data) return { levels: 0, stars: 0, maxStars: 0, cleared: 0, score: 0 };
+        const entries = Object.values(data);
+        return {
+          levels: entries.length,
+          stars: entries.reduce((sum, entry) => sum + Math.max(0, Math.min(3, Number(entry?.stars) || 0)), 0),
+          maxStars: entries.length * 3,
+          cleared: entries.filter((entry) => (Number(entry?.stars) || 0) > 0).length,
+          score: entries.reduce((sum, entry) => sum + (Number(entry?.bestScore) || 0), 0),
+        };
+      }
+
+      function renderProgress() {
+        const grid = document.getElementById("progress-grid");
+        const summary = document.getElementById("progress-summary");
+        if (!grid || !summary) return;
+
+        const cards = [...document.querySelectorAll("[data-game]")];
+        const totals = { stars: 0, maxStars: 0, played: 0, cleared: 0, levels: 0, score: 0 };
+        let resumeGame = null;
+        grid.replaceChildren();
+
+        for (const card of cards) {
+          const game = card.dataset.game;
+          const title = card.querySelector("h3")?.textContent?.trim() || game;
+          const value = summarizeGame(game);
+          if (value.levels > 0) totals.played += 1;
+          totals.stars += value.stars;
+          totals.maxStars += value.maxStars;
+          totals.cleared += value.cleared;
+          totals.levels += value.levels;
+          totals.score += value.score;
+
+          const item = document.createElement("div");
+          item.className = value.levels > 0 ? "progress-item" : "progress-item is-empty";
+          item.setAttribute("role", "listitem");
+          const name = document.createElement("span");
+          name.className = "progress-name";
+          name.textContent = title;
+          const stars = document.createElement("span");
+          stars.className = "progress-stars";
+          stars.textContent = value.levels > 0 ? `★ ${value.stars} / ${value.maxStars}` : "—";
+          const meta = document.createElement("span");
+          meta.className = "progress-meta";
+          meta.textContent =
+            value.levels > 0
+              ? `${value.cleared} / ${value.levels} 단계 · ${value.score}점`
+              : "아직 기록 없음";
+          item.append(name, stars, meta);
+          grid.append(item);
+          if (!resumeGame && value.levels > 0 && value.stars < value.maxStars) resumeGame = game;
+        }
+
+        const resume = document.getElementById("progress-resume");
+        if (resume) {
+          resume.disabled = !resumeGame;
+          resume.dataset.game = resumeGame ?? "";
+        }
+
+        summary.textContent =
+          totals.played > 0
+            ? `플레이한 게임 ${totals.played} / ${cards.length} · 모은 별 ${totals.stars} / ${totals.maxStars} · 클리어한 단계 ${totals.cleared} / ${totals.levels} · 총점 ${totals.score}`
+            : "아직 저장된 기록이 없습니다. 게임을 플레이하면 이곳에 별과 점수가 쌓입니다.";
+      }
+
+      document.getElementById("progress-resume")?.addEventListener("click", (event) => {
+        const game = event.currentTarget.dataset.game;
+        if (!game) return;
+        document.querySelector(`[data-game="${game}"] .play`)?.click();
+      });
+
+      document.getElementById("progress-reset")?.addEventListener("click", () => {
+        if (!window.confirm("모든 게임의 진행 기록을 지울까요? 되돌릴 수 없습니다.")) return;
+        try {
+          const keys = [];
+          for (let index = 0; index < window.localStorage.length; index += 1) {
+            const key = window.localStorage.key(index);
+            if (key && key.startsWith(PROGRESS_PREFIX)) keys.push(key);
+          }
+          for (const key of keys) window.localStorage.removeItem(key);
+        } catch {
+          // 저장소를 쓸 수 없으면 화면만 갱신한다.
+        }
+        renderProgress();
+      });
+
+      renderProgress();
+      window.addEventListener("focus", renderProgress);
+      dialog.addEventListener("close", renderProgress);
 
       window.__landingReady = true;
     </script>

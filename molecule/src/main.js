@@ -175,6 +175,7 @@ function openSessionLevels() {
       stars: sessionProgress.levelState(level.id)?.stars ?? 0,
       unlocked: sessionProgress.isUnlocked(level.id),
     })),
+    footerActions: [{ id: "close", label: "닫기" }],
   }).then((result) => {
     if (!result || !result.levelId) return;
     const level = LEVELS.find((entry) => entry.id === result.levelId);

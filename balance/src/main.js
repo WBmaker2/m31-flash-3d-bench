@@ -296,5 +296,14 @@ window.__gameApi = {
   setChrome: () => {},
   solve,
   loadLevel,
+  showEnding: () =>
+    showEndingScreen({
+      progress,
+      levels: LEVELS,
+      title: "엔딩 화면 검사",
+      rows: [["검사", "통과"]],
+      onFirst: () => {},
+      onLevels: () => {},
+    }),
   levelIndex: () => state.levelIndex,
 };
