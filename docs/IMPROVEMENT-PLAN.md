@@ -81,3 +81,5 @@
 - [x] P2-4 공통 계층 문서화
 
 검증: `npm test` 615개 · `npm run qa` 18종+랜딩 · `npm run qa:visual` · `npm run qa:ui` 통과.
+
+랜딩 자체의 리디자인은 [`LANDING-REDESIGN-PLAN.md`](LANDING-REDESIGN-PLAN.md)에서 이어서 기록했습니다.

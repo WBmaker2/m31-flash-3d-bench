@@ -37,7 +37,7 @@ MiniMax M3.1 Flash(`minimax-m3.1-flash-free`)가 three.js 3D 구현을 어디까
 
 https://wbmaker2.github.io/m31-flash-3d-bench/
 
-랜딩에서 카드의 **PLAY** 버튼을 누르면 그 자리에서 바로 플레이됩니다.
+랜딩에서 게임 패널이나 첫 장의 **플레이** 버튼을 누르면 그 자리에서 바로 플레이됩니다.
 
 ## 로컬 확인
 
@@ -63,9 +63,11 @@ npm run qa:cards  # 카드 이미지 + checks.json 재생성
 
 ## 랜딩 페이지
 
-`index.html`이 이 저장소의 진입점입니다. 18개 게임을 카드로 소개하고, 카드의
-**PLAY** 버튼을 누르면 같은 자리에서 바로 플레이합니다(모달 iframe). 마우스를 카드에 올리면
-그 게임의 다른 각도가 차례로 보입니다.
+`index.html`이 이 저장소의 진입점입니다. 18개 게임을 **입체 팝업북** 한 권으로 보여줍니다.
+첫 장의 폴리곤 동물원 무대에서 바로 플레이하고, 오른쪽 탭 레일이나 목차에서 다른 세계를 펼칩니다.
+게임은 같은 자리의 모달 iframe에서 열립니다(모달 안의 `← GAMES`는 `target="_top"`으로 닫힘).
+랜딩 스타일과 동작은 `landing/landing.css`·`landing/landing.js`에 있고, 실행 안내는
+[`run/index.html`](run/index.html)로 분리되어 있습니다.
 
 랜딩에 적힌 검사 수치는 하드코딩이 아니라 `docs/checks.json`과 대조됩니다. 실제 실행 결과와
 어긋나면 랜딩 검사가 실패하므로, **홍보 페이지가 거짓말하지 못하게** 되어 있습니다.
@@ -73,6 +75,7 @@ npm run qa:cards  # 카드 이미지 + checks.json 재생성
 ```bash
 npm run qa:cards                               # 카드 이미지 + checks.json 재생성
 npm run qa                                     # 랜딩 검사 (링크·모달·수치 대조)
+npm run qa:ui                                  # 랜딩 계약(18개 패널·탭·data-check) 검사
 ```
 
 ## 검사 하네스
@@ -111,10 +114,10 @@ node scripts/shot.mjs landing
   - 시점을 바꿔도 화면이 1% 미만으로만 변함 (장면이 비었거나 평평함)
 - 실패하면 사유를 출력하고 종료 코드 1입니다.
 
-`landing` 타깃은 랜딩 전용으로, 카드 링크 18개 응답 확인 → PLAY 클릭 → 모달 안에서 게임이
+`landing` 타깃은 랜딩 전용으로, 게임 링크 18개 응답 확인 → 첫 장 플레이 클릭 → 모달 안에서 게임이
 실제로 준비되는지 확인 → **랜딩 표시 수치와 `docs/checks.json` 대조** → 모바일 화면 캡처를 합니다.
 `npm run qa:ui`는 브라우저 없이 18개 페이지의 공용 스타일·폰트·백링크·터치 영역과
-랜딩 카드 수를 검사합니다. `npm run qa`는 대표 게임에서 엔딩 화면과 공용 팝업 스타일도 확인합니다.
+랜딩 게임 패널 수를 검사합니다. `npm run qa`는 대표 게임에서 엔딩 화면과 공용 팝업 스타일도 확인합니다.
 
 ## 검사 산출물
 
@@ -319,6 +322,8 @@ PNG가 이력에 쌓여 `.git`이 커집니다. 새로 큰 이미지 묶음을 �
 자세한 설계는 [`docs/PLAN.md`](docs/PLAN.md) 를 보세요.
 
 ## 내역
+
+- 2026-10-26: 랜딩을 **입체 팝업북**으로 전면 교체했다. 펼친 책의 첫 장에 폴리곤 동물원 팝업 무대와 "이 세계로 들어가기"를 두고, 오른쪽 18개 탭 레일로 전체 세계를 훑게 했다. 18개 게임은 6·6·6 그룹으로 묶고 카드 대신 실제 스크린샷 패널로 보여준다. `landing/landing.css`·`landing/landing.js`로 스타일·동작을 분리했고, 실행 안내는 `run/index.html`로 옮겼다. 18개 번호를 원래 순서로 바로잡고, 관찰 기록·검증 책갈피·목차·탭이 같은 번호를 쓰게 했다. `data-check` 77개·`.play` 18개·`progress-grid` 18개 계약은 유지한다. 폰트는 Nanum Myeongjo 700만 추가하고(1.36MB), Gowun Dodum은 4.10MB로 용량 가드를 넘어 기존 Nanum Gothic Coding으로 대체했다. `npm test` 615개, `npm run qa` 18종+랜딩, `npm run qa:ui`, `npm run qa:visual` 통과.
 
 - 2026-10-25: 18종의 **신뢰성·확장성·접근성**을 정리했다. ① defense·molecule이 공용 스타일을 불러오지 않아 레벨/결과/엔딩 팝업이 흰 상자로 뜨던 문제를 고치고, 18개 게임의 `← GAMES`가 모달 iframe 안에서 랜딩을 다시 열던 문제를 `target="_top"`으로 고쳤다. ② cloud·maze·flock에 공용 터치 패드(`common/touch-pad.js`)를 붙여 태블릿에서도 조작할 수 있게 했다. ③ `common/engine/stage.js`·`loop.js`로 18벌의 렌더 루프·리사이즈·4시점·정리 코드를 공통 계층으로 모아 `stage.js`를 3,062줄에서 1,943줄로 줄였다. ④ `scripts/games.mjs` 단일 게임 목록과 `npm run qa:ui` 계약 검사(공용 스타일·폰트·백링크·터치 영역·랜딩 수치)를 추가했다. ⑤ QA에 엔딩 화면·공용 팝업 스타일·모바일 터치 버튼 검사를 넣고, maze의 1인칭 투영 좌표가 NaN이던 기준도 고쳤다. ⑥ 접근성: `aria-live` 상태 알림, 별점 라벨, dialog 제목/포커스 복귀, PLAY 버튼 게임명. ⑦ 랜딩에 **MY PROGRESS** 대시보드(게임별 별·완료 단계·총점, 이어서 하기, 전체 초기화)와 카드 lazy loading을 추가했다. ⑧ 문서 수치(9개→18개, 12종→18종, 613→615개, 옛 경로)를 바로잡고 `docs/BENCHMARK.md`·`docs/RUNS.md`·`docs/IMPROVEMENT-PLAN.md`를 남겼다. 단위 테스트 2개 추가(615개).
 

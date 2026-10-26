@@ -5,3 +5,10 @@ node_modules
 .env.*
 !.env.example
 .vitest
+
+# impeccable working artifacts (keep .impeccable/design.json)
+.impeccable/questions/
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/build/
+.impeccable/decision-payload.json

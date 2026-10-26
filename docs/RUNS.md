@@ -3,6 +3,15 @@
 이 파일은 "언제, 어떤 모델이, 어떤 상태를 만들었는지"를 남기는 실행 로그입니다.
 수치가 바뀌면 해당 커밋의 `docs/checks.json`을 함께 봅니다.
 
+## 2026-10-26 — 랜딩 입체 팝업북
+
+- 모델: `opencode/minimax-m3.1-flash-free`
+- 작업: 랜딩을 입체 팝업북으로 전면 교체, `landing/` 분리, `run/index.html` 분리
+- 단위 테스트: 615개 통과
+- QA: `npm run qa` 18종+랜딩, `npm run qa:ui`, `npm run qa:visual` 통과
+- 화면: 1440×900·1280×800·1366×768·980×800·768×1024·390×844 확인, 가로 스크롤 0
+- 폰트: Nanum Myeongjo 700 추가(1.36MB). Gowun Dodum은 4.10MB로 가드 초과 → 기존 Nanum Gothic Coding 사용
+
 ## 2026-10-25 — 개선 작업
 
 - 모델: `opencode/minimax-m3.1-flash-free`

@@ -13,6 +13,7 @@ const UA =
 const FAMILIES = [
   { name: "IBM Plex Mono", query: "IBM+Plex+Mono:wght@400;500;600" },
   { name: "Nanum Gothic Coding", query: "Nanum+Gothic+Coding:wght@400;700" },
+  { name: "Nanum Myeongjo", query: "Nanum+Myeongjo:wght@700" },
 ];
 
 await mkdir(FONT_DIR, { recursive: true });

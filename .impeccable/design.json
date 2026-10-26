@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-26T00:00:00.000Z",
+  "title": "Design System: M3.1 FLASH / 3D BENCH — Pop-up Book",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Cardstock",
+        "canonical": "#f4ead8",
+        "tonalRamp": ["#2b2118", "#4b3927", "#6b5a45", "#8c795f", "#ad987b", "#cbb896", "#e3d4bb", "#f4ead8"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Book Ink",
+        "canonical": "#2b2118",
+        "tonalRamp": ["#140f0b", "#2b2118", "#463628", "#63503d", "#806b55", "#9d876e", "#baa58b", "#d8c6a8"]
+      },
+      "red": {
+        "role": "primary",
+        "displayName": "Pop-up Vermilion",
+        "canonical": "#b93d29",
+        "tonalRamp": ["#4a130c", "#6e1d13", "#8d2c1e", "#a53526", "#b93d29", "#d05a43", "#e4816d", "#f4b2a4"]
+      },
+      "blue": {
+        "role": "secondary",
+        "displayName": "Paper Cobalt",
+        "canonical": "#2f5fa8",
+        "tonalRamp": ["#101f3a", "#1a3260", "#244785", "#2f5fa8", "#4979bd", "#6f9bd0", "#9ebfdf", "#d0e1f0"]
+      },
+      "ochre": {
+        "role": "tertiary",
+        "displayName": "School Ochre",
+        "canonical": "#d9a62e",
+        "tonalRamp": ["#3d2b08", "#6b4d0f", "#9a7016", "#c08c20", "#d9a62e", "#e7bd5c", "#f1d58e", "#faedc5"]
+      },
+      "table": {
+        "role": "neutral",
+        "displayName": "Dark Table",
+        "canonical": "#2b1e14",
+        "tonalRamp": ["#0d0906", "#1b110a", "#2b1e14", "#433024", "#5b4333", "#755a46", "#92755c", "#b0967d"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Nanum Myeongjo", "purpose": "Book headlines and game names only." },
+      "body": { "displayName": "Nanum Gothic Coding", "purpose": "Explanatory copy, labels, and controls." },
+      "label": { "displayName": "IBM Plex Mono", "purpose": "Numbers, page folios, tab numbers, ledger values." }
+    },
+    "shadows": [
+      { "name": "book-stack", "value": "0 2px 0 #d8c6a8, 0 10px 0 #c8b08c, 0 28px 52px rgba(0,0,0,0.46)", "purpose": "The closed page stack under the open book." },
+      { "name": "paper-tab", "value": "0 5px 0 #8d2c1e, 0 10px 16px rgba(43,30,20,0.2)", "purpose": "Physical thickness under the primary paper tab." },
+      { "name": "paper-lift", "value": "0 16px 32px rgba(43,30,20,0.28)", "purpose": "Popup stage screenshot and colored paper layers." }
+    ],
+    "motion": [
+      { "name": "page-rise", "value": "520ms cubic-bezier(0.2, 0.8, 0.2, 1)", "purpose": "One-time entrance for each book spread." },
+      { "name": "paper-press", "value": "150ms ease", "purpose": "Paper tab lift and press." },
+      { "name": "modal-rise", "value": "220ms ease-out", "purpose": "Paper player sheet entering the dark table." }
+    ],
+    "breakpoints": [
+      { "name": "one-page", "value": "980px" },
+      { "name": "mobile", "value": "620px" },
+      { "name": "short-desktop", "value": "780px height" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Paper Tab",
+      "kind": "button",
+      "refersTo": "paper-tab",
+      "description": "The primary action sitting on a popup stage or game panel.",
+      "html": "<a class=\"ds-paper-tab\" href=\"#\">이 세계로 들어가기</a>",
+      "css": ".ds-paper-tab{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:12px 18px;border:1px solid var(--red-deep,#8d2c1e);border-radius:2px;background:var(--red,#b93d29);color:var(--paper-bright,#fff8eb);box-shadow:0 5px 0 var(--red-deep,#8d2c1e),0 10px 16px rgba(43,30,20,.2);text-decoration:none;font-family:var(--font-body,\"Nanum Gothic Coding\",sans-serif);font-size:13px;font-weight:700;cursor:pointer;transition:transform 150ms ease,box-shadow 150ms ease,background 150ms ease}.ds-paper-tab:hover{background:#c1452f;transform:translateY(-2px);box-shadow:0 7px 0 var(--red-deep,#8d2c1e),0 13px 20px rgba(43,30,20,.22)}.ds-paper-tab:active{transform:translateY(3px);box-shadow:0 2px 0 var(--red-deep,#8d2c1e),0 5px 10px rgba(43,30,20,.18)}.ds-paper-tab:focus-visible{outline:2px solid var(--blue,#2f5fa8);outline-offset:3px}"
+    },
+    {
+      "name": "Active World Tab",
+      "kind": "nav",
+      "refersTo": "tab-current",
+      "description": "The current world in the 18-item book-edge tab rail.",
+      "html": "<a class=\"ds-tab-current\" href=\"#\" aria-current=\"true\"><span>01</span>동물원</a>",
+      "css": ".ds-tab-current{display:grid;grid-template-columns:18px 1fr;align-items:center;gap:3px;min-height:22px;padding:2px 5px;border:1px solid var(--red-deep,#8d2c1e);border-right:0;border-radius:2px 0 0 2px;background:var(--red,#b93d29);color:var(--paper-bright,#fff8eb);box-shadow:3px 3px 0 rgba(141,44,30,.22);text-decoration:none;font-family:var(--font-body,\"Nanum Gothic Coding\",sans-serif);font-size:11px;transform:translateX(10px)}.ds-tab-current span{font-family:var(--font-mono,\"IBM Plex Mono\",monospace);font-size:11px;font-weight:600;color:#ffe9c8}"
+    },
+    {
+      "name": "Game Panel",
+      "kind": "card",
+      "refersTo": "game-panel",
+      "description": "A real game screenshot with name, capability, one check count, and play tab.",
+      "html": "<article class=\"ds-game-panel\"><div class=\"ds-game-media\"></div><div class=\"ds-game-body\"><span class=\"ds-game-num\">02</span><h3>3D 분자 빌더</h3><p class=\"ds-game-cap\">화학 교육</p><p class=\"ds-game-desc\">원자를 결합해 분자를 만들고, 결합각까지 맞춰 봅니다.</p><div class=\"ds-game-foot\"><span>검사 30</span><a class=\"ds-paper-tab ds-paper-tab-small\" href=\"#\">플레이</a></div></div></article>",
+      "css": ".ds-game-panel{display:grid;grid-template-columns:41% 1fr;gap:12px;padding:8px 0;border-top:1px solid rgba(203,184,150,.68);cursor:pointer}.ds-game-media{aspect-ratio:16/10;border:4px solid var(--paper-bright,#fff8eb);background:var(--paper-bright,#fff8eb);box-shadow:5px 5px 0 rgba(47,95,168,.4),-4px -4px 0 rgba(217,166,46,.45),0 6px 12px rgba(43,30,20,.16)}.ds-game-body{display:flex;flex-direction:column;min-width:0}.ds-game-num{color:var(--red-deep,#8d2c1e);font:600 9px var(--font-mono,\"IBM Plex Mono\",monospace)}.ds-game-body h3{margin:2px 0 1px;color:var(--ink,#2b2118);font:700 22px/1.2 var(--font-display,\"Nanum Myeongjo\",serif);letter-spacing:-.03em}.ds-game-cap{margin:0 0 3px;color:var(--ink-soft,#6b5a45);font:400 9.5px var(--font-mono,\"IBM Plex Mono\",monospace)}.ds-game-desc{margin:0 0 5px;color:var(--ink-soft,#6b5a45);font:400 11px/1.5 var(--font-body,\"Nanum Gothic Coding\",sans-serif)}.ds-game-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;color:var(--ink-soft,#6b5a45);font:600 9px var(--font-mono,\"IBM Plex Mono\",monospace)}.ds-paper-tab-small{min-height:32px;padding:8px 12px;font-size:11px;box-shadow:0 3px 0 var(--red-deep,#8d2c1e),0 6px 10px rgba(43,30,20,.16)}"
+    },
+    {
+      "name": "Progress Stamp",
+      "kind": "custom",
+      "refersTo": "progress-stamp",
+      "description": "One game's observation record in the progress spread.",
+      "html": "<div class=\"ds-stamp\"><span class=\"ds-stamp-num\">01</span><span class=\"ds-stamp-name\">폴리곤 동물원</span><span class=\"ds-stamp-stars\">★ 3/9</span><span class=\"ds-stamp-meta\">2/3 단계 · 300점</span></div>",
+      "css": ".ds-stamp{display:grid;grid-template-columns:24px 1fr auto;gap:2px 7px;min-height:48px;padding:7px 8px;border:1px dashed var(--crease,#cbb896);background:rgba(255,248,235,.38)}.ds-stamp-num{color:var(--red-deep,#8d2c1e);font:600 9px var(--font-mono,\"IBM Plex Mono\",monospace)}.ds-stamp-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink,#2b2118);font:700 10.5px var(--font-body,\"Nanum Gothic Coding\",sans-serif)}.ds-stamp-stars{color:var(--red-deep,#8d2c1e);font:600 8.5px var(--font-mono,\"IBM Plex Mono\",monospace);white-space:nowrap}.ds-stamp-meta{grid-column:2/-1;color:var(--ink-soft,#6b5a45);font:400 9px var(--font-mono,\"IBM Plex Mono\",monospace)}"
+    },
+    {
+      "name": "Player Dialog",
+      "kind": "custom",
+      "refersTo": "player-dialog",
+      "description": "The paper frame around the game iframe.",
+      "html": "<div class=\"ds-player\"><div class=\"ds-player-bar\"><span>이 세계로 들어가는 중</span><strong>폴리곤 동물원</strong><a href=\"#\">새 탭에서 열기</a><button>닫기</button></div><div class=\"ds-player-screen\"></div></div>",
+      "css": ".ds-player{overflow:hidden;border:1px solid var(--crease,#cbb896);background:var(--paper,#f4ead8);box-shadow:0 26px 64px rgba(0,0,0,.55)}.ds-player-bar{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--crease,#cbb896);background:var(--paper-mid,#efe1c9);font:600 10px var(--font-mono,\"IBM Plex Mono\",monospace)}.ds-player-bar span{color:var(--red-deep,#8d2c1e);letter-spacing:.1em}.ds-player-bar strong{font:700 14px var(--font-display,\"Nanum Myeongjo\",serif);color:var(--ink,#2b2118)}.ds-player-bar a,.ds-player-bar button{margin-left:auto;padding:7px 10px;border:1px solid var(--crease,#cbb896);background:transparent;color:var(--ink,#2b2118);font:600 10.5px var(--font-body,\"Nanum Gothic Coding\",sans-serif);text-decoration:none;cursor:pointer}.ds-player-screen{height:260px;background:#111}"
+    },
+    {
+      "name": "Run Command",
+      "kind": "custom",
+      "refersTo": "run-command",
+      "description": "A copyable command row on the separate run page.",
+      "html": "<div class=\"ds-run\"><code>npm run qa</code><button>명령 복사</button></div>",
+      "css": ".ds-run{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--crease,#cbb896);background:rgba(255,248,235,.42)}.ds-run code{flex:1;color:var(--ink,#2b2118);font:400 12px var(--font-mono,\"IBM Plex Mono\",monospace);white-space:nowrap}.ds-run button{padding:6px 9px;border:1px solid var(--crease,#cbb896);background:transparent;color:var(--ink,#2b2118);font:600 11px var(--font-body,\"Nanum Gothic Coding\",sans-serif);cursor:pointer}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Pop-up Book",
+    "overview": "18개의 3D 게임을 한 권의 두꺼운 카드스톡 책으로 펼친다. 표지나 균일한 카드 그리드가 아니라, 펼친 두 페이지·거터·탭 레일·팝업 무대가 화면의 구조다. 게임은 종이 색지 레이어 사이에서 튀어나오고, 실제 스크린샷이 무대 위에 서며, '이 세계로 들어가기'가 그 무대 위에 있다. 검증은 책 뒤쪽의 책갈피와 접이식 기록으로 물러난다.",
+    "keyCharacteristics": [
+      "크림색 종이와 잉크, 주홍·코발트·황토·풀색 색지.",
+      "2px 종이 모서리, 6px 책 모서리, 아래로 두꺼운 종이 탭 그림자.",
+      "명조 헤드라인, 모노 라벨·숫자, 본문은 나눔고딕코딩.",
+      "한 번에 한 펼침. 18개 번호와 6·6·6 그룹은 유지한다.",
+      "실제 docs/cards/ 스크린샷만 쓴다. 가짜 목업을 만들지 않는다."
+    ],
+    "rules": [
+      { "name": "The Paper Thickness Rule", "body": "Depth comes from the page stack, gutter, and paper tab thickness, never from glass or neon.", "section": "elevation" },
+      { "name": "The Real Screenshot Rule", "body": "Every popup stage uses a real docs/cards screenshot; no invented mockups.", "section": "typography" },
+      { "name": "The Book Order Rule", "body": "Numbers 01–18 and the 6·6·6 group order stay consistent across tabs, TOC, progress, and ledger.", "section": "layout" }
+    ],
+    "dos": [
+      "실제 게임 스크린샷과 실제 docs/checks.json 수치를 쓴다.",
+      "18개 번호와 6·6·6 그룹을 유지한다.",
+      "종이의 두께·거터·탭 레일을 레이아웃 구조로 쓴다.",
+      "키보드 포커스, aria-current, aria-label, reduced motion을 유지한다."
+    ],
+    "donts": [
+      "다크 터미널·네온·글래스모피즘을 랜딩에 다시 넣지 않는다.",
+      "카드 18개를 같은 크기로 반복하는 그리드로 돌아가지 않는다.",
+      "검증 수치를 카드마다 네 줄로 반복하지 않는다.",
+      "가짜 후기·고객 수·수상·벤치마크 수치를 만들지 않는다.",
+      "Gowun Dodum을 다시 추가하지 않는다. 용량 가드에서 제외된 결정이다."
+    ]
+  }
+}

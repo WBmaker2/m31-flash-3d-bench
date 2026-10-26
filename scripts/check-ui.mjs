@@ -18,6 +18,7 @@ async function read(relative) {
 }
 
 const landing = await read("index.html");
+const runPage = await read("run/index.html");
 const readme = await read("README.md");
 const pkg = JSON.parse(await read("package.json") || "{}");
 const checks = JSON.parse(await read("docs/checks.json") || "{}");
@@ -28,7 +29,7 @@ if (!styles.includes('@import url("../vendor/fonts/fonts.css")')) {
   problems.push("common/styles.css 가 vendor/fonts/fonts.css 를 불러오지 않습니다.");
 }
 
-const landingGames = [...landing.matchAll(/<article class="card" data-frames data-game="([^"]+)"/g)].map(
+const landingGames = [...landing.matchAll(/<article[^>]*data-game="([^"]+)"/g)].map(
   (match) => match[1],
 );
 if (landingGames.length !== GAMES.length) {
@@ -38,7 +39,7 @@ for (const game of GAMES) {
   if (!landingGames.includes(game.id)) problems.push(`랜딩에 ${game.id} 카드가 없습니다.`);
 }
 
-const playHrefs = [...landing.matchAll(/class="play"[^>]*data-href="([^"]+)"/g)].map((match) => match[1]);
+const playHrefs = [...landing.matchAll(/data-href="([^"]+)"/g)].map((match) => match[1]);
 for (const game of GAMES) {
   if (!playHrefs.includes(`${game.id}/index.html`)) {
     problems.push(`랜딩 PLAY 버튼에 ${game.id}/index.html 이 없습니다.`);
@@ -50,6 +51,21 @@ if (landing.includes("여덟 개의")) problems.push("index.html 에 옛 게임 
 if (readme.includes("9개 게임")) problems.push("README.md 에 옛 게임 수 표현 '9개 게임'이 남아 있습니다.");
 if (readme.includes("공유 런타임 의존성은 없습니다")) problems.push("README.md 에 현재 구조와 다른 '공유 런타임 없음' 문구가 남아 있습니다.");
 if (!landing.includes('id="progress-grid"')) problems.push("index.html 에 진행 대시보드(progress-grid)가 없습니다.");
+if (!landing.includes('id="progress-summary"')) problems.push("index.html 에 진행 요약(progress-summary)이 없습니다.");
+if (!landing.includes('id="progress-resume"')) problems.push("index.html 에 이어서 펼치기 버튼이 없습니다.");
+if (!landing.includes('id="progress-reset"')) problems.push("index.html 에 기록 지우기 버튼이 없습니다.");
+if (!landing.includes('href="landing/landing.css"')) problems.push("index.html 이 landing/landing.css 를 불러오지 않습니다.");
+if (!landing.includes('src="landing/landing.js"')) problems.push("index.html 이 landing/landing.js 를 불러오지 않습니다.");
+if ((landing.match(/class="tab"/g) ?? []).length !== GAMES.length) {
+  problems.push(`랜딩 탭이 ${(landing.match(/class="tab"/g) ?? []).length}개입니다. ${GAMES.length}개를 기대했습니다.`);
+}
+const checkCount = (landing.match(/data-check=/g) ?? []).length;
+if (checkCount !== 5 + GAMES.length * 4) {
+  problems.push(`랜딩 data-check 노드가 ${checkCount}개입니다. ${5 + GAMES.length * 4}개를 기대했습니다.`);
+}
+if (!runPage.includes('href="../landing/landing.css"')) problems.push("run/index.html 이 landing/landing.css 를 불러오지 않습니다.");
+if (!runPage.includes('src="./run.js"')) problems.push("run/index.html 이 run.js 를 불러오지 않습니다.");
+if (!landing.includes('href="run/index.html"')) problems.push("index.html 에 run/index.html 링크가 없습니다.");
 if (!String(pkg.description ?? "").includes("18종")) problems.push("package.json description 이 18종 기준이 아닙니다.");
 
 if (checks?.totals?.games !== GAMES.length) {
@@ -88,6 +104,7 @@ for (const game of GAMES) {
 
 for (const [relative, text] of [
   ["index.html", landing],
+  ["run/index.html", runPage],
   ["README.md", readme],
   ["package.json", JSON.stringify(pkg)],
   ["scripts/steps.mjs", steps],
